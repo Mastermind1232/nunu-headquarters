@@ -1,4 +1,5 @@
-import {ID, state, benefits} from "./rules.mjs";
+import {ID, state, benefits, PRACTICE_SKILLS, practiceLimit, effectChanges, effectFlags} from "./rules.mjs";
+import {run, registerAction} from "./approval.mjs";
 
 // Mechanical payouts only, checked against CP:R pp. 382–385. Rows are d6 results;
 // each payout band contains amounts for Role ranks 1–4, 5–7 and 8–10.
@@ -41,9 +42,10 @@ export const escapeHTML = value => String(value ?? "").replace(/[&<>"']/g, c => 
 export function ownedCharacters() {
   return (game.actors?.contents ?? []).filter(a => a.type === "character" && a.isOwner).sort((a, b) => a.name.localeCompare(b.name));
 }
-export function requireCharacter(actorId) {
+export function requireCharacter(actorId, user = game.user) {
   const actor = game.actors?.get(actorId);
-  if (!actor || actor.type !== "character" || !actor.isOwner) throw new Error("Choose a character you currently own.");
+  const owner = user === game.user ? actor?.isOwner : actor?.testUserPermission?.(user, "OWNER");
+  if (!actor || actor.type !== "character" || !owner) throw new Error("Choose a character you currently own.");
   return actor;
 }
 export function requireAccess(doc) {
@@ -105,8 +107,8 @@ async function report(actor, text) {
   catch { ui.notifications.warn("Character updated, but the chat receipt could not be posted. Do not repeat the action."); }
 }
 
-export async function applyHealing(doc, actorId, days) {
-  const s = requireAccess(doc), actor = requireCharacter(actorId);
+export async function applyHealing(doc, actorId, days, requester = game.user) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId, requester);
   const body = actor.system.stats.body.value, bonus = benefits(s).healing;
   const hp = actor.system.derivedStats.hp;
   const before = hp.value, result = recover(before, hp.max, healingAmount(body, bonus, days));
@@ -114,14 +116,14 @@ export async function applyHealing(doc, actorId, days) {
   await report(actor, `Healed ${result.gained} HP over ${days} day(s): (BODY ${body} + HQ ${bonus}) × ${days}. HP ${before} → ${result.value} (maximum ${hp.max}).`);
   return result;
 }
-export async function applyHumanity(doc, actorId) {
-  const s = requireAccess(doc), actor = requireCharacter(actorId), {humanityFormula} = moraleMode(s);
+export async function applyHumanity(doc, actorId, requester = game.user) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId, requester), {humanityFormula} = moraleMode(s);
   if (!humanityFormula) throw new Error("Monthly Humanity requires at least one Morale Boost upgrade.");
   const roll = await new Roll(humanityFormula).evaluate();
   await roll.toMessage({speaker: ChatMessage.getSpeaker({actor}), flavor: "HQ monthly Humanity recovery — rolled amount (before maximum cap)"});
   // Check permissions and current resources again after the asynchronous roll.
   if (moraleMode(requireAccess(doc)).humanityFormula !== humanityFormula) throw new Error("HQ benefits changed during the roll; no Humanity was applied.");
-  requireCharacter(actorId);
+  requireCharacter(actorId, requester);
   const humanity = actor.system.derivedStats.humanity;
   // 0.92.4's calculator includes installed cyberware and max-Humanity effects.
   const max = typeof actor._calcMaxHumanity === "function" ? actor._calcMaxHumanity() : humanity.max;
@@ -131,8 +133,8 @@ export async function applyHumanity(doc, actorId) {
   await report(actor, `Monthly Humanity: restored ${result.gained}; ${before} → ${result.value} (maximum ${max}). EMP ${Math.floor(result.value / 10)}.`);
   return result;
 }
-export async function applyHustle(doc, actorId, {roleId, table}, choose) {
-  const s = requireAccess(doc), actor = requireCharacter(actorId), mode = moraleMode(s).hustle;
+export async function applyHustle(doc, actorId, {roleId, table}, choose, requester = game.user) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId, requester), mode = moraleMode(s).hustle;
   const role = actor.items.get(roleId), rank = role?.system.rank;
   if (role?.type !== "role") throw new Error("Choose one of this character's Role items.");
   hustleResult(table, rank, 1); // Validate before rolling or updating the actor.
@@ -148,7 +150,7 @@ export async function applyHustle(doc, actorId, {roleId, table}, choose) {
     if (selected === null) return null;
     if (![0, 1].includes(selected)) throw new Error("Choose one of the two Hustle results.");
   }
-  requireCharacter(actorId);
+  requireCharacter(actorId, requester);
   if (moraleMode(requireAccess(doc)).hustle !== mode) throw new Error("HQ benefits changed during the Hustle; no money was applied.");
   const chosen = mode === "both" ? outcomes : [outcomes[selected]], amount = chosen.reduce((sum, o) => sum + o.amount, 0);
   const wealth = actor.system.wealth;
@@ -168,8 +170,8 @@ export function lifestyleOptions(actor, raw) {
   const discount = benefits(raw).lifestyle;
   return LIFESTYLES.filter(item => names.has(item.name.toLowerCase())).map(item => ({...item, discount, amount: Math.max(0, item.cost - discount)}));
 }
-export async function applyLifestyle(doc, actorId, name, expectedAmount) {
-  const s = requireAccess(doc), actor = requireCharacter(actorId);
+export async function applyLifestyle(doc, actorId, name, expectedAmount, requester = game.user) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId, requester);
   const option = lifestyleOptions(actor, s).find(item => item.name === name);
   if (!option) throw new Error("The selected lifestyle item is no longer on this character's sheet.");
   if (option.amount !== expectedAmount) throw new Error("The lifestyle price or HQ discount changed. Review the payment again.");
@@ -183,27 +185,79 @@ export async function applyLifestyle(doc, actorId, name, expectedAmount) {
   return {...option, balance};
 }
 
+/* ---------------- Training Area ---------------- */
+export async function applyPractice(doc, actorId, skills, requester = game.user) {
+  const s = requireAccess(doc), actor = requireCharacter(actorId, requester);
+  if (!s.improvements.training) throw new Error("This HQ has no Training Area.");
+  const roles = Array.from(actor.items.values()).filter((i) => i.type === "role").map((i) => roleTable(i));
+  const list = [...new Set((skills ?? []).filter((x) => PRACTICE_SKILLS.includes(x)))];
+  if (!list.length) throw new Error("Choose a skill from the Training Area list.");
+  if (list.length > practiceLimit(s, roles)) throw new Error("Only Solos with the upgraded Training Area practice two skills at once.");
+  const old = actor.effects.filter((e) => e.getFlag(ID, "practice") === doc.uuid).map((e) => e.id);
+  if (old.length) await actor.deleteEmbeddedDocuments("ActiveEffect", old);
+  await actor.createEmbeddedDocuments("ActiveEffect", [{name: `HQ Training: ${list.join(", ")}`, img: "icons/svg/upgrade.svg", origin: doc.uuid,
+    changes: effectChanges(list, 1), flags: effectFlags(list.length, {practice: doc.uuid})}]);
+  await report(actor, `Practiced ${list.join(" and ")} at the HQ: +1 until the crew's next HQ IP award.`);
+  return list;
+}
+/** Removes every practice bonus this HQ granted. Called when HQ IP is awarded. */
+export async function clearPractice(doc) {
+  let cleared = 0;
+  for (const actor of game.actors?.contents ?? []) {
+    const ids = actor.effects?.filter?.((e) => e.getFlag(ID, "practice") === doc.uuid).map((e) => e.id) ?? [];
+    if (ids.length) { await actor.deleteEmbeddedDocuments("ActiveEffect", ids); cleared += ids.length; }
+  }
+  return cleared;
+}
+async function selectPractice(doc, actor) {
+  const s = state(doc.getFlag(ID, "hq"));
+  const roles = Array.from(actor.items.values()).filter((i) => i.type === "role").map((i) => roleTable(i));
+  const limit = practiceLimit(s, roles);
+  const options = PRACTICE_SKILLS.map((n) => `<option value="${escapeHTML(n)}">${escapeHTML(n)}</option>`).join("");
+  return prompt({title: `${actor.name} — Training Area`, label: "Practice",
+    content: `<label>Skill<select name="skill1">${options}</select></label>${limit > 1 ? `<label>Second skill (Solo)<select name="skill2"><option value="">None</option>${options}</select></label>` : ""}<p>One week of downtime. +1 to the skill until the crew's next HQ IP award, or until this character practices again.</p>`,
+    read: (html) => [html.find('[name="skill1"]').val(), html.find('[name="skill2"]').val()].filter(Boolean)});
+}
+
+/* ---------------- Handlers the GM runs after approval (or at once for their own clicks) ---------------- */
+const autoChoose = async (outcomes) => (outcomes[1].amount > outcomes[0].amount ? 1 : 0);
+registerAction("heal", (hq, {actorId, days}, u) => applyHealing(hq, actorId, days, u));
+registerAction("humanity", (hq, {actorId}, u) => applyHumanity(hq, actorId, u));
+registerAction("lifestyle", (hq, {actorId, name, amount}, u) => applyLifestyle(hq, actorId, name, amount, u));
+registerAction("practice", (hq, {actorId, skills}, u) => applyPractice(hq, actorId, skills, u));
+registerAction("hustle", (hq, {actorId, roleId, table}, u) => applyHustle(hq, actorId, {roleId, table}, u === game.user
+  ? (outcomes) => prompt({title: "Choose your Hustle result", label: "Credit selected income",
+      content: `<p>Morale Boost lets you keep either result:</p><select name="outcome">${outcomes.map((o, i) => `<option value="${i}" ${o.amount > outcomes[1 - i].amount ? "selected" : ""}>Roll ${i + 1}: ${o.die} — ${escapeHTML(o.event)} — ${o.amount}eb</option>`).join("")}</select>`,
+      read: (html) => Number(html.find('[name="outcome"]').val())})
+  : autoChoose, u));
+
 export async function runBenefit(doc, action) {
-  if (!["heal", "humanity", "hustle", "lifestyle"].includes(action)) throw new Error("Unknown benefit action.");
+  if (!["heal", "humanity", "hustle", "lifestyle", "practice"].includes(action)) throw new Error("Unknown benefit action.");
   requireAccess(doc);
   const selection = await selectCharacter(action);
   if (!selection) return;
   return locked(selection.actorId, async () => {
-    if (action === "heal") return applyHealing(doc, selection.actorId, selection.days);
-    if (action === "humanity") return applyHumanity(doc, selection.actorId);
+    const actor = requireCharacter(selection.actorId);
+    if (action === "heal") return run(doc, "heal", {actorId: actor.id, days: selection.days}, `${actor.name}: heal ${selection.days} day(s) of natural recovery at the HQ.`);
+    if (action === "humanity") return run(doc, "humanity", {actorId: actor.id}, `${actor.name}: roll this month's Humanity recovery.`);
+    if (action === "practice") {
+      const skills = await selectPractice(doc, actor);
+      if (!skills || !skills.length) return;
+      return run(doc, "practice", {actorId: actor.id, skills}, `${actor.name}: practice ${skills.join(" and ")} at the Training Area (+1 until the next HQ IP award).`);
+    }
     if (action === "lifestyle") {
-      const actor = requireCharacter(selection.actorId), options = lifestyleOptions(actor, requireAccess(doc));
+      const options = lifestyleOptions(actor, requireAccess(doc));
       if (!options.length) throw new Error("No lifestyle item found. Add an item named Kibble, Generic Prepak, Good Prepak or Fresh Food to the character sheet.");
       const chosen = await prompt({title: `${actor.name} — Monthly lifestyle`, label: "Pay selected lifestyle",
         content: `<p>Balance: ${escapeHTML(actor.system.wealth?.value)}eb. Pay for one month.</p><label>Lifestyle found on character<select name="lifestyle">${options.map(o => `<option value="${escapeHTML(o.name)}">${o.name}: ${o.cost}eb − ${o.discount}eb discount = ${o.amount}eb</option>`).join('')}</select></label><p>If multiple lifestyle items are present, select the one to pay. Each payment adds an entry to the character's Eurobucks ledger.</p>`,
         read: html => html.find('[name="lifestyle"]').val()});
       if (chosen === null) return;
-      return applyLifestyle(doc, selection.actorId, chosen, options.find(o => o.name === chosen)?.amount);
+      const amount = options.find(o => o.name === chosen)?.amount;
+      return run(doc, "lifestyle", {actorId: actor.id, name: chosen, amount}, `${actor.name}: pay ${amount}eb for a month of ${chosen}.`);
     }
-    const role = await selectRole(requireCharacter(selection.actorId));
+    const role = await selectRole(actor);
     if (!role) return;
-    return applyHustle(doc, selection.actorId, role, outcomes => prompt({title: "Choose your Hustle result", label: "Credit selected income",
-      content: `<p>Morale Boost lets you keep either result:</p><select name="outcome">${outcomes.map((o, i) => `<option value="${i}" ${o.amount > outcomes[1-i].amount ? "selected" : ""}>Roll ${i+1}: ${o.die} — ${escapeHTML(o.event)} — ${o.amount}eb</option>`).join("")}</select>`,
-      read: html => Number(html.find('[name="outcome"]').val())}));
+    const item = actor.items.get(role.roleId);
+    return run(doc, "hustle", {actorId: actor.id, roleId: role.roleId, table: role.table}, `${actor.name}: weekly Hustle as ${item?.name ?? role.table} rank ${item?.system?.rank ?? "?"}.`);
   });
 }

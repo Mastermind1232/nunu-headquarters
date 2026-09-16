@@ -1,6 +1,8 @@
-import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit} from "./rules.mjs";
+import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, PRESETS, CATALOG, claim, SITUATIONAL, practiceLimit} from "./rules.mjs";
 import {customDialog, escapeHTML} from "./custom-improvements.mjs";
-import {runBenefit, ownedCharacters, moraleMode} from "./character-benefits.mjs";
+import {runBenefit, ownedCharacters, moraleMode, clearPractice} from "./character-benefits.mjs";
+import {installApprovalHooks} from "./approval.mjs";
+import {installPresenceHooks, actorRoles} from "./presence.mjs";
 import {assetData, openLink, saveDrop, setCrewSlot, createStash, syncStashOwnership, moneyDialog} from "./hq-assets.mjs";
 import {crewIPDialog} from "./crew-ip.mjs";
 import {workshopView, bindWorkshop} from './workshop-ui.mjs';
@@ -19,7 +21,18 @@ export class HeadquartersSheet extends DocumentSheet {
   async getData() {
     const s = state(this.document.getFlag(ID, "hq"));
     const canUseBenefits = s.access && ownedCharacters().length > 0;
-    return {name: this.document.name, s, b: benefits(s), assets: await assetData(this.document), w: await workshopView(this.document), editable: this.isEditable,
+    const assets = await assetData(this.document);
+    assets.crew = assets.crew.map((c) => ({...c, resident: Boolean(s.residents?.[c.index])}));
+    const w = await workshopView(this.document);
+    const scenes = (game.scenes?.contents ?? []).map((sc) => ({id: sc.id, name: sc.name, selected: sc.id === s.sceneId}));
+    const situational = Object.entries(SITUATIONAL).filter(([id]) => s.improvements[id] > 0).map(([id, def]) => ({
+      name: CATALOG.find((c) => c.id === id).name, roles: def.roles.map((r) => r.charAt(0).toUpperCase() + r.slice(1)).join(", "),
+      bonus: s.improvements[id] >= 2 && def.upgraded ? Object.values(def.upgraded)[0] : def.bonus, skills: def.skills.join(", ")}));
+    const soloTwo = ownedCharacters().some((a) => practiceLimit(s, actorRoles(a)) > 1);
+    return {name: this.document.name, s, b: benefits(s), assets, w, editable: this.isEditable,
+      presets: PRESETS.map((p) => ({...p, starterName: CATALOG.find((c) => c.id === p.starter).name, selected: p.id === s.preset})),
+      scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "", residentCount: assets.crew.filter((c) => c.resident && c.linked).length,
+      showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
       cards: catalog(s).map(c => ({...c, customUpgrades: c.custom ? c.upgrades : [], rank: s.improvements[c.id], owned: s.improvements[c.id] > 0,
@@ -106,6 +119,8 @@ export class HeadquartersSheet extends DocumentSheet {
     if (!this.isEditable) return;
     const s = state(this.document.getFlag(ID, "hq"));
     const updates = {};
+    if (data.residents !== undefined) updates[`flags.${ID}.hq.residents`] = Array.from({length: 6}, (_, i) => Boolean(Array.isArray(data.residents) ? data.residents[i] : data.residents?.[i]));
+    if (data.sceneId !== undefined) updates[`flags.${ID}.hq.sceneId`] = String(data.sceneId ?? "");
     for (const key of ["location", "description", "notes", "crew", "rent", "reducedRent", "beds", "access", "faction", "purchaseCost"]) {
       if (!(key in data)) continue;
       let value = data[key];
@@ -153,10 +168,22 @@ export class HeadquartersSheet extends DocumentSheet {
       if (latest.purchaseCost !== cost) throw new Error("The purchase cost changed. Please review the new price and try again.");
       s = purchase(latest, id);
       label = `Purchased ${name} (-${cost} HQ IP)`;
+    } else if (action === "claim") {
+      const presetId = this.element.find("[data-preset]").val();
+      const preset = PRESETS.find((p) => p.id === presetId);
+      if (!preset) throw new Error("Pick a place to claim.");
+      const starter = catalog(s).find((c) => c.id === preset.starter).name;
+      if (!await Dialog.confirm({title: "Claim headquarters", content: `<p>Make <b>${escapeHTML(preset.name)}</b> the crew's headquarters?</p><p>Sets the name, location, rent (${preset.rent}eb) and beds, builds in <b>${escapeHTML(starter)}</b> for free, and awards <b>40 HQ IP</b>.</p>`})) return;
+      const claimed = claim(state(this.document.getFlag(ID, "hq")), preset.id);
+      s = claimed.s;
+      await this.document.update({name: preset.name});
+      label = `Claimed ${preset.name}: ${starter} built in, +40 HQ IP`;
     } else if (action === "award") {
       const amount = award;
       if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(s.ip + amount)) throw new Error("Enter a positive whole HQ IP award.");
-      s.ip += amount; label = `Awarded ${amount} HQ IP; clear any practiced skill bonuses after a Group IP award`;
+      s.ip += amount;
+      const cleared = await clearPractice(this.document);
+      label = `Awarded ${amount} HQ IP` + (cleared ? `; ${cleared} practice bonus(es) expired` : "");
     } else if (action === "lose") {
       const name = catalog(s).find(c => c.id === id)?.name;
       if (!name || !s.improvements[id]) return;
@@ -186,7 +213,9 @@ async function createHQ() {
 }
 Hooks.once("init", () => {
   installWorkshopHooks();
-  DocumentSheetConfig.registerSheet(JournalEntry, ID, HeadquartersSheet, {label: "Headquarters - No Place Like Home", makeDefault: false});
+  installApprovalHooks();
+  installPresenceHooks();
+  DocumentSheetConfig.registerSheet(JournalEntry, ID, HeadquartersSheet, {label: "NuNu Headquarters", makeDefault: false});
 });
 Hooks.once("ready", () => { game.modules.get(ID).api = {createHQ}; });
 Hooks.on('updateJournalEntry', (doc, changes) => {

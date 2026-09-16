@@ -1,5 +1,5 @@
 <form autocomplete="off">
-  <header class="hq-header"><div class="hq-title"><span>CREW DOSSIER / HEADQUARTERS</span><h1>No Place Like Home</h1>
+  <header class="hq-header"><div class="hq-title"><span>NUNU / CREW HEADQUARTERS</span><h1>Headquarters</h1>
     <input name="name" aria-label="Headquarters name" value="{{name}}" {{#unless editable}}disabled{{/unless}}>
     </div><div class="hq-picture">
       {{#if s.image}}<img src="{{s.image}}" alt="Headquarters image">{{else}}<div class="image-placeholder"><i class="fas fa-building"></i><span>HQ image</span></div>{{/if}}
@@ -11,11 +11,11 @@
     <a class="item" data-tab="crew" data-group="hq" tabindex="0">Crew</a>
     <a class="item" data-tab="benefits" data-group="hq" tabindex="0">Active Crew Benefits</a>
     <a class="item" data-tab="improvements" data-group="hq" tabindex="0">Improvements & Upgrades</a>
-    <a class="item" data-tab="workshop" data-group="hq" tabindex="0">Workshop</a>
+    {{#if showWorkshop}}<a class="item" data-tab="workshop" data-group="hq" tabindex="0">Workshop</a>{{/if}}
     <a class="item" data-tab="activity" data-group="hq" tabindex="0">Recent Activity</a>
   </nav>
   <main class="hq-body">
-    <section class="tab nplh-workshop" data-tab="workshop" data-group="hq">
+    {{#if showWorkshop}}<section class="tab nplh-workshop" data-tab="workshop" data-group="hq">
       <h2>Workshop / Project register</h2>
       <p>Record work, not elapsed dates. Current HQ capacity: <strong>{{w.capacity}} projects per session</strong>. One crafting month = {{w.monthDays}} days; one day = 24 hours.</p>
       <div class="workshop-toolbar">{{#if w.canWork}}<button type="button" data-workshop="create">New project</button><button type="button" data-workshop="session">Record work session</button>{{/if}}{{#if w.gm}}<button type="button" data-workshop="settings">Month length</button>{{/if}}</div>
@@ -45,16 +45,19 @@
       <details class="workshop-folder" data-workshop-folder="sessions" open><summary><i class="fas fa-folder"></i> Work Sessions <span>{{w.sessions.length}}</span></summary><div class="workshop-folder-body">
       {{#each w.sessions}}<div class="workshop-ledger"><strong>{{date}} · {{time}}{{#if voided}} · VOIDED{{/if}}</strong><p>{{projects}}</p><p>{{notes}}{{#if voided}} · Correction: {{voidReason}}{{/if}}</p>{{#if ../w.gm}}<button type="button" class="workshop-delete" data-workshop="delete-session" data-session-id="{{id}}">Delete work session</button>{{#unless voided}}<button type="button" data-workshop="void" data-session-id="{{id}}">Void / correct session</button>{{/unless}}{{/if}}</div>{{else}}<p>No work recorded yet.</p>{{/each}}</div></details>
       <details><summary>GM / request audit</summary>{{#each w.audit}}<p>{{date}} · {{action}} · {{userId}} {{reason}}</p>{{/each}}</details>
-    </section>
+    </section>{{/if}}
     {{#unless editable}}<p class="notice">Shared crew record · Your GM manages purchases and edits.</p>{{/unless}}
     {{#unless s.access}}<p class="notice">ACCESS LOST — HQ benefits are suspended.</p>{{/unless}}
     {{#if s.workstationDebt}}<p class="notice">Restore the upgraded Workstation before other purchases.{{#if editable}} <button type="button" data-action="departure">Resolve Team Member departure</button>{{/if}}</p>{{/if}}
     <section class="tab" data-tab="info" data-group="hq">
+    {{#if editable}}<div class="claim"><select data-preset>{{#each presets}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}} · {{rent}}eb/month · comes with {{starterName}}</option>{{/each}}</select><button type="button" data-action="claim"><i class="fas fa-flag"></i> Claim this place</button>
+      <span class="hint">Fills in the place, builds in its free Improvement, and awards the crew 40 HQ IP.</span></div>{{/if}}
     <fieldset {{#unless editable}}disabled{{/unless}}>
       <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>Crew name / notes<input name="crew" value="{{s.crew}}"></label></div>
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
       <div class="fields three"><label>Original monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Reduced rent (discount, eb)<input type="number" min="0" step="1" name="reducedRent" value="{{s.reducedRent}}"></label><label>Original beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}"></label></div>
       <div class="fields"><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label><label class="check"><input type="checkbox" name="faction" {{checked s.faction}}> NPC faction HQ (blocks crew IP spending)</label></div>
+      <label>HQ scene<select name="sceneId"><option value="">None</option>{{#each scenes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select><span class="hint">Lounge, Medbay, Studio and Evidence Wall bonuses go on a crew member's sheet while their token is in this scene and it is the active scene.</span></label>
     </fieldset>
     <section class="stats"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>Lifetime HQ IP spent</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span><button type="button" data-money="rent" data-available="{{assets.stash.canPayRent}}" {{#unless assets.stash.canPayRent}}disabled{{/unless}}>Pay</button></div><div><strong>{{b.beds}}</strong><span>Total beds</span></div></section>
     {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Award once per crew, equal to Group IP—not multiplied by members.</span></div>{{/if}}
@@ -65,7 +68,9 @@
         <button type="button" data-open="{{uuid}}" data-available="{{#if linked}}true{{else}}false{{/if}}" {{#unless linked}}disabled{{/unless}} title="{{name}}">
         {{#if image}}<img src="{{image}}" alt="{{name}} portrait">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></button>
         {{#if ../editable}}{{#if uuid}}<button type="button" class="unlink" data-asset-action="clear-crew" data-slot="{{index}}" title="Unlink crew sheet">×</button>{{/if}}{{/if}}
+        {{#if linked}}{{#if ../editable}}<label class="resident"><input type="checkbox" name="residents.{{index}}" {{checked resident}}> lives here</label>{{else}}{{#if resident}}<span class="resident">lives here</span>{{/if}}{{/if}}{{/if}}
       </div>{{/each}}</div>
+      <p class="hint">{{residentCount}} crew member(s) living here. Anyone living here stops paying their own housing and pays the HQ's rent instead. Monthly rent: <b>{{b.monthlyRent}}eb</b>.</p>
       {{#if editable}}<div class="crew-ip-toolbar"><button type="button" data-crew-ip><i class="fas fa-star" aria-hidden="true"></i> Award crew IP</button><button type="button" data-crew-money><i class="fas fa-coins" aria-hidden="true"></i> Award crew money</button></div>{{/if}}
       <p class="hint">The GM can drag and drop character sheets from the Actors directory into the six crew slots. Click a portrait to open its sheet.</p>
       <div class="hq-utilities"><div class="garage-slot" data-drop-zone="garage"><h3>Garage</h3>
@@ -90,6 +95,9 @@
     <p>LUCK increase: <b>+{{b.luck}}</b></p><div class="benefit-row"><p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p><button type="button" data-benefit="lifestyle" {{#unless canUseBenefits}}disabled{{/unless}}>Pay lifestyle…</button></div>
     <div class="benefit-row"><p>Monthly Humanity: <b>{{b.humanity}}</b></p><button type="button" data-benefit="humanity" {{#unless canRecoverHumanity}}disabled{{/unless}}><i class="fas fa-dice" aria-hidden="true"></i> Roll & restore…</button></div>
     <div class="benefit-row"><p>Hustle: <b>{{b.hustle}}</b></p><button type="button" data-benefit="hustle" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-coins" aria-hidden="true"></i> Roll & earn…</button></div>
+    {{#if s.improvements.training}}<div class="benefit-row"><p>Training Area: <b>+1</b> to one combat skill for a week of practice, until the next HQ IP award{{#if soloTwo}} (Solos: two skills){{/if}}</p><button type="button" data-benefit="practice" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-dumbbell" aria-hidden="true"></i> Practice…</button></div>{{/if}}
+    {{#each situational}}<p class="situational"><b>{{name}}</b>, while in the HQ scene: {{roles}} +{{bonus}} to {{skills}}.</p>{{/each}}
+    {{#unless editable}}<p class="hint">Every button here asks the GM to approve before it changes a sheet.</p>{{/unless}}
     {{#if b.negotiation}}<p>Job pay: Fixers gain +2 Trading; non-Fixers can negotiate a 20% increase as Operator 5, without a Trading bonus.</p>{{/if}}
     {{#if b.custom}}<p>Morale upgrade 10: record the crew's GM-approved unique benefit in Notes.</p>{{/if}}</div>
     {{#if customBenefits}}<h3>Custom benefits <small>Apply effects manually</small></h3><div class="cards">{{#each customBenefits}}<article class="card owned"><h3>{{name}}</h3><p>{{base}}</p><ol>{{#each acquiredUpgrades}}<li>{{this}}</li>{{/each}}</ol></article>{{/each}}</div>{{/if}}
@@ -110,7 +118,7 @@
     <section class="tab" data-tab="activity" data-group="hq">
     <h2>Recent activity</h2><ol class="log">{{#each log}}<li><b>{{label}}</b><br><small>{{date}} · {{user}}</small></li>{{else}}<li>No purchases or awards yet.</li>{{/each}}</ol>
     {{#if editable}}<button type="button" data-action="destroy" class="destroy">Record HQ destruction</button>{{/if}}
-    <p class="source">Unofficial companion to R. Talsorian Games' No Place Like Home (2024). Refer to your DLC and core rulebook for complete rules.</p>
+    <p class="source">NuNu private build on SleepingM4n's No Place Like Home module. Rules from R. Talsorian Games' No Place Like Home (2024).</p>
     </section>
   </main>
 </form>

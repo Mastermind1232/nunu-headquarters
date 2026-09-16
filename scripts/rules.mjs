@@ -1,4 +1,6 @@
-export const ID = "no-place-like-home";
+export const ID = "nunu-headquarters";
+export const SYSTEM = "cyberpunk-red-core";
+export const STARTER_IP = 40;
 export const COST = 40;
 // Rank 0 = absent, 1 = improvement, 2+ = improvement plus upgrades.
 export const CATALOG = [
@@ -17,7 +19,7 @@ export const CATALOG = [
 ].map(([id, name, page, base, upgrade]) => ({id, name, page, base, upgrade}));
 
 export function defaults() {
-  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
+  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], residents: [], sceneId: "", preset: "", garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
 }
 export function state(raw = {}) {
   const d = defaults();
@@ -80,3 +82,64 @@ export function benefits(raw) {
     custom: active && m >= 10
   };
 }
+
+/* ---------------- NuNu additions ---------------- */
+
+/** The four places on the table in Session 6. Each comes with one Improvement built in. */
+export const PRESETS = [
+  {id: "tripleg", name: "Ganic Gains Gym", location: "Northwest Midtown, just north of Blue Block", rent: 5000, beds: 6, starter: "training",
+    description: "The Pure's refurbished basement gym, Triple G on the street. Gym, bunk room, lockers, lounge, back office."},
+  {id: "level16", name: "Level 16 North", location: "Green Block, floor 16 west", rent: 7500, beds: 6, starter: "morale",
+    description: "The Jokerz' old floor: three studios, three mini units, a hall and the armory."},
+  {id: "redclub", name: "The Red Club", location: "Midtown", rent: 5000, beds: 2, starter: "lounge",
+    description: "One of The Collector's clubs, hosted by the crew for 5,000eb a month and a favor every month."},
+  {id: "scavenger", name: "The Scavenger Site", location: "The Flats", rent: 0, beds: 4, starter: "medbay",
+    description: "The cleared harvester hideout: operating tables and cold storage, underground."},
+];
+
+/** Applies a preset: name is returned for the journal, the rest lands in the HQ record. Grants the starter IP. */
+export function claim(raw, presetId, grant = STARTER_IP) {
+  const s = state(raw);
+  const preset = PRESETS.find((x) => x.id === presetId);
+  if (!preset) throw new Error("Unknown headquarters preset.");
+  Object.assign(s, {location: preset.location, description: preset.description, rent: preset.rent, reducedRent: 0, beds: preset.beds, access: true, faction: false, preset: preset.id});
+  if (!s.improvements[preset.starter]) s.improvements[preset.starter] = 1;
+  s.ip += grant;
+  return {s, preset};
+}
+
+/** Same rule the system uses to turn a skill name into its bonus key (cpr-systemUtils.slugify, 0.92.4). */
+export function slugify(name) {
+  const noSpace = String(name).split(" ").join("");
+  let joined;
+  if (["Conceal/Reveal Object", "Paint/Draw/Sculpt", "Resist Torture/Drugs"].includes(name)) joined = noSpace.split("/").join("Or");
+  else if (name === "Language (Streetslang)") joined = noSpace.split("(").join("").split(")").join("");
+  else joined = noSpace.split("/").join("And").split("&").join("And");
+  return joined.charAt(0).toLowerCase() + joined.slice(1);
+}
+
+/** Bonuses that apply while a crew member's token is in the HQ scene and that scene is active. */
+export const SITUATIONAL = {
+  lounge: {roles: ["fixer"], bonus: 2, skills: ["Bribery", "Bureaucracy", "Business", "Conversation", "Human Perception", "Persuasion", "Trading"]},
+  medbay: {roles: ["medtech"], bonus: 2, skills: ["First Aid", "Paramedic", "Surgery"]},
+  studio: {roles: ["rockerboy"], bonus: 2, skills: ["Acting", "Composition", "Play Instrument", "Paint/Draw/Sculpt", "Photography/Film"]},
+  evidence: {roles: ["lawman", "media"], bonus: 2, upgraded: {lawman: 3}, skills: ["Composition", "Criminology", "Cryptography", "Deduction", "Education", "Forgery", "Library Search", "Photography/Film"]},
+};
+export const PRACTICE_SKILLS = ["Athletics", "Archery", "Autofire", "Brawling", "Evasion", "Handgun", "Heavy Weapons", "Martial Arts", "Melee Weapon", "Shoulder Arms"];
+
+export function effectChanges(skills, bonus) { return skills.map((n) => ({key: `bonuses.${slugify(n)}`, mode: 2, value: String(bonus)})); }
+export function effectFlags(count, extra = {}) {
+  return {[SYSTEM]: {changes: {cats: Object.fromEntries(Array.from({length: count}, (_, i) => [String(i), "skill"]))}}, [ID]: extra};
+}
+/** Which situational bonuses an actor with these roles should carry right now. */
+export function desiredSituational(raw, roles, present) {
+  const s = state(raw);
+  if (!s.access || !present) return [];
+  return Object.entries(SITUATIONAL).filter(([id, def]) => s.improvements[id] > 0 && def.roles.some((r) => roles.includes(r))).map(([id, def]) => {
+    const rank = s.improvements[id];
+    const bonus = Math.max(...def.roles.filter((r) => roles.includes(r)).map((r) => (rank >= 2 && def.upgraded?.[r]) ? def.upgraded[r] : def.bonus));
+    return {improvement: id, bonus, skills: def.skills};
+  });
+}
+/** How many skills a practice covers: Solos with the upgrade get two. */
+export function practiceLimit(raw, roles) { const s = state(raw); return s.improvements.training >= 2 && roles.includes("solo") ? 2 : 1; }

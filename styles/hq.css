@@ -23,3 +23,8 @@
 .nplh .hq-body>.tab>h2:first-child,.nplh .hq-body>.tab>.hq-links>h2:first-child{margin-top:4px}
 .crew-ip-dialog .crew-ip-selection{display:flex;align-items:center;gap:8px;margin:10px 0}.crew-ip-dialog .crew-ip-selection button{width:auto}.crew-ip-dialog [data-recipient-count]{margin-left:auto;font-size:12px}
 .crew-ip-dialog .crew-ip-list{max-height:230px;overflow:auto;border:1px solid #8886;padding:6px 10px}.crew-ip-dialog label.crew-ip-choice{display:flex;align-items:center;gap:10px;margin:7px 0;font-weight:normal}.crew-ip-dialog .crew-ip-choice input{width:16px;margin:0;flex-shrink:0}.crew-ip-dialog .crew-ip-choice span{overflow-wrap:anywhere}.crew-ip-dialog textarea{width:100%;margin-top:6px;resize:vertical}
+
+.nplh .claim{display:flex;gap:8px;align-items:center;flex-wrap:wrap;padding:12px;margin-bottom:14px;background:#1c2736;border:1px solid #455265}.nplh .claim select{flex:1;min-width:220px;color:#f2f5f9;background:#0d131c;border:1px solid #546173;height:32px}.nplh .claim button{width:auto;padding:7px 14px}.nplh .claim .hint{flex-basis:100%}
+.nplh label select{display:block;width:100%;margin-top:6px;color:#f2f5f9;background:#0d131c;border:1px solid #546173;height:32px}.nplh label .hint{display:block;margin-top:4px}
+.nplh .crew-slot .resident{display:flex;align-items:center;gap:4px;font-size:10px;margin:4px 0 0;color:#bac8d9;justify-content:center}.nplh .crew-slot .resident input{width:12px;margin:0}
+.nplh .situational{font-size:12px;margin:8px 0;color:#d6e0ea}

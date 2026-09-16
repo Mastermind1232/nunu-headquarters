@@ -12,7 +12,7 @@ function prompt(title,content,read,render) {return new Promise(resolve=>new Dial
 const val=(html,key)=>html.find(`[name="${key}"]`).val();
 export async function workshopView(hq) {
   const s=workshopState(hq.getFlag(ID,'workshop')??{}),ctx=await workshopContext(hq);
-  const view={gm:ctx.gm,capacity:capacity(ctx),monthDays:s.monthDays,canWork:ctx.gm||ctx.techs.some(t=>t.owned),
+  const view={gm:ctx.gm,hasTech:ctx.techs.length>0,capacity:capacity(ctx),monthDays:s.monthDays,canWork:ctx.gm||ctx.techs.some(t=>t.owned),
     projects:s.projects.map(p=>{const a=currentAttempt(p),done=credited(s,p),owned=ctx.gm||ctx.techs.some(t=>t.uuid===p.techUuid&&t.owned);
       return {...p,gm:ctx.gm,isPrototype:p.kind!=='invention',canLinkItem:owned&&p.kind!=='invention',tech:ctx.techs.find(t=>t.uuid===p.techUuid)?.name??'Former / missing crew Tech',status:a.status,dv:a.dv,target:duration(a.requiredMinutes),done:duration(done),percent:Math.min(100,Math.floor(done/a.requiredMinutes*100)),totalCost:p.components.reduce((n,c)=>n+c.cost,0),canEdit:ctx.gm||owned&&!p.approved,canRetry:owned&&a.status==='failed',canPrototype:owned&&p.kind==='invention'&&a.status==='success',canResolve:ctx.gm&&p.approved&&a.status==='active',canReopen:ctx.gm&&a.status!=='active',attempts:p.attempts.map(a=>({...a,work:duration(credited(s,p,a)),target:duration(a.requiredMinutes)}))};}),
     sessions:[...s.sessions].reverse().map(x=>({...x,time:duration(x.minutes),projects:[...x.credits.map(c=>`${s.projects.find(p=>p.id===c.projectId)?.name??'Missing'} (${c.role})`),...(x.deletedProjects??[]).map(p=>`${p.name} (deleted project)`)].join(', ')})),

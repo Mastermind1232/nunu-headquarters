@@ -52,16 +52,21 @@ test('lifestyle failed writes and malformed ledgers do not report a payment', as
   await assert.rejects(applyLifestyle(doc,actor.id,'Kibble',100),/Failed write/);
   assert.equal(messages.length,0);
 });
-test('lifestyle UI cancellation makes no debit and selected item determines the payment', async () => {
+test('lifestyle UI: cancel does nothing, a player sends the GM a request, the GM applies at once', async () => {
   actor.items.set('a',{name:'Kibble'});actor.items.set('b',{name:'Fresh Food'});actor.system.wealth.value=2000;
-  let cancel=true;
+  let cancel=true; const sent=[];
+  game.users=[{id:'gm',isGM:true,active:true}]; game.socket={emit:(name,msg)=>sent.push({name,msg})};
   globalThis.Dialog=class {constructor(config){this.config=config;}render(){
     if(this.config.title==='Pay monthly lifestyle') this.config.buttons.apply.callback({find:()=>({val:()=>actor.id})});
     else if(cancel) this.config.buttons.cancel.callback();
     else this.config.buttons.apply.callback({find:()=>({val:()=> 'Fresh Food'})});
   }};
-  await runBenefit(doc,'lifestyle');assert.equal(actor.system.wealth.value,2000);
-  cancel=false;await runBenefit(doc,'lifestyle');assert.equal(actor.system.wealth.value,500);
+  await runBenefit(doc,'lifestyle');assert.equal(sent.length,0);assert.equal(actor.system.wealth.value,2000);
+  cancel=false;await runBenefit(doc,'lifestyle');
+  assert.equal(sent.length,1);assert.equal(sent[0].name,'module.nunu-headquarters');assert.equal(sent[0].msg.action,'lifestyle');
+  assert.equal(sent[0].msg.payload.amount,1500);assert.equal(actor.system.wealth.value,2000,'a player request debits nothing until the GM approves');
+  game.user.isGM=true;
+  try {await runBenefit(doc,'lifestyle');assert.equal(actor.system.wealth.value,500);} finally {game.user.isGM=false;}
 });
 test("heals BODY plus stacked HQ bonuses over multiple days and caps at maximum", async () => {
   doc.hq.improvements.medbay = 1; doc.hq.improvements.morale = 3;

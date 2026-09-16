@@ -1,5 +1,6 @@
 import {ID, state, benefits} from "./rules.mjs";
 import {escapeHTML, ownedCharacters, requireCharacter} from "./character-benefits.mjs";
+import {run, registerAction} from "./approval.mjs";
 
 export function crewSlots(raw = []) { return Array.from({length: 6}, (_, i) => typeof raw[i] === "string" ? raw[i] : ""); }
 export function setCrewSlot(raw, index, uuid) {
@@ -80,8 +81,8 @@ export function moneyUpdates(actor, delta, reason) {
   return {"system.wealth.value": value, "system.wealth.transactions": [...wallet.transactions.map(r => [...r]), [`${delta >= 0 ? "+" : ""}${delta}eb; balance ${value}eb`, reason]]};
 }
 const transfers = new Set();
-async function rentSource(hq) {
-  if (!hq.testUserPermission(game.user, 'OBSERVER')) throw new Error('You cannot access this HQ.');
+async function rentSource(hq, requester = game.user) {
+  if (!hq.testUserPermission(requester, 'OBSERVER')) throw new Error('You cannot access this HQ.');
   const s = state(hq.getFlag(ID, 'hq')), stash = await resolveLink(s.stashUuid);
   if (!stash || stash.documentName !== 'Actor' || stash.type !== 'container' || !stash.isOwner || stash.getFlag(ID, 'headquarters') !== hq.uuid || stash.getFlag('cyberpunk-red-core', 'container-type') !== 'stash') throw new Error('Create and sync this HQ’s shared stash first. You need Owner permission on it to pay rent.');
   const current = state(hq.getFlag(ID, 'hq'));
@@ -91,24 +92,24 @@ async function rentSource(hq) {
   if (amount <= 0) throw new Error('No rent is due.');
   return {stash, amount};
 }
-export async function payRent(hq) {
-  const quote = await rentSource(hq);
+export async function payRent(hq, {confirm = true, requester = game.user} = {}) {
+  const quote = await rentSource(hq, requester);
   if (transfers.has(quote.stash.uuid)) throw new Error('A stash payment or transfer is already in progress. Please wait.');
   transfers.add(quote.stash.uuid);
   try {
     moneyUpdates(quote.stash, -quote.amount, 'Rent payment');
-    if (!await Dialog.confirm({title: 'Pay monthly rent', content: `<p>Pay ${quote.amount}eb for one month of ${escapeHTML(hq.name)} rent from ${escapeHTML(quote.stash.name)}?</p><p>Each payment covers one month. No automatic calendar limit is enforced.</p>`})) return;
-    const current = await rentSource(hq);
+    if (confirm && !await Dialog.confirm({title: 'Pay monthly rent', content: `<p>Pay ${quote.amount}eb for one month of ${escapeHTML(hq.name)} rent from ${escapeHTML(quote.stash.name)}?</p><p>Each payment covers one month. No automatic calendar limit is enforced.</p>`})) return;
+    const current = await rentSource(hq, requester);
     if (current.stash.uuid !== quote.stash.uuid || current.amount !== quote.amount) throw new Error('Rent or the linked stash changed. Review the payment again.');
     await current.stash.update(moneyUpdates(current.stash, -current.amount, `${hq.name}: monthly rent — ${game.user.name}`));
     ui.notifications.info(`Paid ${current.amount}eb rent from ${current.stash.name}.`);
     return current.amount;
   } finally { transfers.delete(quote.stash.uuid); }
 }
-export async function transferMoney(hq, actorId, direction, amount) {
-  if (!hq.testUserPermission(game.user, "OBSERVER")) throw new Error("You cannot access this HQ.");
+export async function transferMoney(hq, actorId, direction, amount, requester = game.user) {
+  if (!hq.testUserPermission(requester, "OBSERVER")) throw new Error("You cannot access this HQ.");
   if (!Number.isSafeInteger(amount) || amount <= 0 || !["deposit", "withdraw"].includes(direction)) throw new Error("Enter a positive whole amount of Eurobucks.");
-  const actor = requireCharacter(actorId), stash = await resolveLink(state(hq.getFlag(ID, "hq")).stashUuid);
+  const actor = requireCharacter(actorId, requester), stash = await resolveLink(state(hq.getFlag(ID, "hq")).stashUuid);
   if (!stash || stash.type !== "container" || !stash.isOwner) throw new Error("You need Owner permission on the shared stash.");
   if (transfers.has(stash.uuid)) throw new Error("A stash transfer is already in progress. Please wait.");
   transfers.add(stash.uuid);
@@ -127,13 +128,24 @@ export async function transferMoney(hq, actorId, direction, amount) {
     ui.notifications.info(`${direction === "deposit" ? "Deposited" : "Withdrew"} ${amount}eb for ${actor.name}.`);
   } finally { transfers.delete(stash.uuid); }
 }
+registerAction("rent", (hq, payload, u) => payRent(hq, {confirm: u === game.user, requester: u}));
+registerAction("withdraw", (hq, {actorId, amount}, u) => transferMoney(hq, actorId, "withdraw", amount, u));
 export async function moneyDialog(hq, direction) {
-  if (direction === 'rent') return payRent(hq);
+  if (direction === 'rent') {
+    if (game.user.isGM) return payRent(hq);
+    const {amount} = await rentSource(hq);
+    return run(hq, "rent", {}, `Pay ${amount}eb rent for ${hq.name} from the shared stash.`);
+  }
   const actors = ownedCharacters();
   if (!actors.length) throw new Error("You need an owned character to transfer money.");
   const result = await new Promise(resolve => new Dialog({title: direction === "deposit" ? "Deposit Eurobucks" : "Withdraw Eurobucks",
     content: `<div class="nplh-benefit-dialog"><label>Character<select name="actor">${actors.map(a => `<option value="${escapeHTML(a.id)}">${escapeHTML(a.name)}</option>`).join("")}</select></label><label>Eurobucks<input name="amount" type="number" min="1" step="1" value="100"></label></div>`,
     buttons: {apply: {label: "Transfer", callback: html => resolve({id: html.find('[name="actor"]').val(), amount: Number(html.find('[name="amount"]').val())})}, cancel: {label: "Cancel", callback: () => resolve(null)}},
     default: "apply", close: () => resolve(null)}).render(true));
-  if (result) await transferMoney(hq, result.id, direction, result.amount);
+  if (!result) return;
+  if (direction === "withdraw" && !game.user.isGM) {
+    const actor = requireCharacter(result.id);
+    return run(hq, "withdraw", {actorId: actor.id, amount: result.amount}, `${actor.name}: withdraw ${result.amount}eb from the shared stash.`);
+  }
+  await transferMoney(hq, result.id, direction, result.amount);
 }
