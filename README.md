@@ -13,10 +13,10 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 
 ## Install on The Forge
 
-Upload `module.json` and `module.zip` to the Forge assets library under `NuNu/Modules/nunu-headquarters/`, then install by manifest URL:
+Upload `module.json` and `module.zip` to the Forge assets library under `modules/nunu-headquarters/`, then install by manifest URL:
 
 ```
-https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/NuNu/Modules/nunu-headquarters/module.json
+https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json
 ```
 
 ## Session 6 flow
