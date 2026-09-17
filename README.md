@@ -9,6 +9,8 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 - **Bonuses while at the HQ.** Set the HQ scene on the HQ Info tab. While a crew member's token is in that scene and the scene is the active one, the Lounge, Medbay, Studio and Evidence Wall skill bonuses sit on their sheet as an Active Effect (role-checked). Leave the scene, or activate another, and the effect is removed. The active GM's client keeps this in sync.
 - **Training Area practice.** Practice puts +1 on the chosen combat skill as an Active Effect. Awarding HQ IP clears every practice bonus. Solos with the upgraded Training Area practice two skills.
 - **Rent.** One number the GM edits by hand, split evenly across the crew and paid from their own sheets. Rent Reduction is applied by editing the number.
+- **Improvements table.** One row per Improvement, Base and Upgrade columns, a tick where owned and a Buy button where not; click a name for the rule text.
+- **Map pin.** Claiming drops a journal pin on the HQ scene that opens the sheet. Players need Display Notes on to see pins.
 - **Workshop tab** only appears when a Tech is in the crew.
 
 ## Install and update on The Forge

@@ -89,3 +89,11 @@ test("manifest assets exist and template block helpers balance", () => {
   }
   assert.equal(stack.length, 0);
 });
+test("improvement rows expose base and upgrade cell states", async () => {
+  const app = sheet();
+  app.document.hq = state({ip: 200, improvements: {lounge: 2, morale: 4, training: 0}});
+  const rows = Object.fromEntries((await app.getData()).cards.map((c) => [c.id, c]));
+  assert.equal(rows.lounge.owned, true); assert.equal(rows.lounge.upgradeDone, true); assert.equal(rows.lounge.canBuyUpgrade, false);
+  assert.equal(rows.morale.multi, true); assert.equal(rows.morale.upgradeLabel, "3 of 10"); assert.equal(rows.morale.canBuyUpgrade, true);
+  assert.equal(rows.training.owned, false); assert.equal(rows.training.canBuyBase, true); assert.equal(rows.training.canBuyUpgrade, false);
+});

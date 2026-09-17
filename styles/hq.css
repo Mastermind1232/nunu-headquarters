@@ -43,3 +43,20 @@
 .nplh .stats.three{grid-template-columns:repeat(3,1fr)}
 .nplh .fields.three label.check{align-self:end;margin-bottom:20px}
 .nplh .hint{font-size:11px;line-height:1.45}
+
+/* Improvements table */
+.nplh table.improvements{width:100%;border-collapse:collapse;background:transparent;margin:0}
+.nplh table.improvements th{font-size:11px;text-align:left;color:#bac8d9;border-bottom:2px solid #c62828;padding:6px 8px;background:transparent}
+.nplh table.improvements th:nth-child(2),.nplh table.improvements th:nth-child(3){text-align:center;width:120px}
+.nplh table.improvements td{padding:6px 8px;border-bottom:1px solid #2f3b4c;vertical-align:middle;font-size:13px}
+.nplh table.improvements tr.owned td:first-child{border-left:3px solid #75e0d7}
+.nplh table.improvements td.cell{text-align:center;white-space:nowrap}
+.nplh table.improvements td.tools{width:100px;text-align:right}
+.nplh table.improvements td.tools button{width:auto;padding:4px 7px;font-size:11px;margin-left:4px}
+.nplh table.improvements .tick{color:#75e0d7;font-weight:bold}.nplh table.improvements .dash{color:#5d6c80}.nplh table.improvements .count{margin-right:6px;color:#bac8d9;font-size:12px}
+.nplh table.improvements td.cell button{width:auto;padding:4px 10px;font-size:11px}
+.nplh table.improvements summary{color:#e8edf4;font-size:14px;font-weight:bold;list-style:none;cursor:pointer}
+.nplh table.improvements summary::-webkit-details-marker{display:none}.nplh table.improvements summary::before{content:"\25B8";display:inline-block;width:14px;color:#75e0d7}
+.nplh table.improvements details[open] summary::before{content:"\25BE"}
+.nplh table.improvements summary small{font-weight:normal;color:#8ea0b5;font-size:10px;margin-left:6px}
+.nplh table.improvements details p,.nplh table.improvements details ol{font-size:12px;line-height:1.5;margin:6px 0 4px 14px;color:#d6e0ea}

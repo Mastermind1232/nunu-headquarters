@@ -33,9 +33,12 @@ export class HeadquartersSheet extends DocumentSheet {
       showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
-      cards: catalog(s).map(c => ({...c, customUpgrades: c.custom ? c.upgrades : [], rank: s.improvements[c.id], owned: s.improvements[c.id] > 0,
-        upgraded: s.improvements[c.id] > 1, upgrades: Math.max(0, s.improvements[c.id] - 1),
-        maxUpgrades: limit(s, c.id) - 1, error: purchaseError(s, c.id)})),
+      cards: catalog(s).map(c => {
+        const rank = s.improvements[c.id], max = limit(s, c.id) - 1, ups = Math.max(0, rank - 1), error = purchaseError(s, c.id);
+        return {...c, customUpgrades: c.custom ? c.upgrades : [], rank, owned: rank > 0, upgraded: rank > 1, upgrades: ups, maxUpgrades: max, error,
+          multi: max > 1, upgradeLabel: max > 1 ? `${ups} of ${max}` : "", upgradeDone: max > 0 && ups >= max, noUpgrade: max === 0,
+          canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max};
+      }),
       log: [...s.log].reverse().slice(0, 30)};
   }
   activateListeners(html) {
@@ -186,6 +189,7 @@ export class HeadquartersSheet extends DocumentSheet {
       s = claim(state(this.document.getFlag(ID, "hq")), picked);
       s.image = scene.thumb || scene.background?.src || s.image || "";
       await this.document.update({name: scene.name});
+      await pinOnScene(scene, this.document).catch((e) => ui.notifications.warn(`HQ claimed, but no pin was placed: ${e.message}`));
       const starter = picked.starter ? catalog(s).find((c) => c.id === picked.starter)?.name : null;
       label = `Claimed ${scene.name}` + (starter ? `: ${starter} built in` : "") + (picked.ip ? `, +${picked.ip} HQ IP` : "");
     } else if (action === "award") {
@@ -212,6 +216,14 @@ export class HeadquartersSheet extends DocumentSheet {
     s.log.push({date: new Date().toLocaleString(), user: game.user.name, label});
     await this.document.setFlag(ID, "hq", s);
   }
+}
+
+/** Drops a journal pin for the HQ on its scene, once, at the centre of the map. Opening the pin opens the sheet. */
+async function pinOnScene(scene, doc) {
+  if (scene.notes.some((n) => n.entryId === doc.id)) return;
+  const d = scene.dimensions;
+  await scene.createEmbeddedDocuments("Note", [{entryId: doc.id, x: Math.round(d.sceneX + d.sceneWidth / 2), y: Math.round(d.sceneY + d.sceneHeight / 2),
+    texture: {src: "icons/svg/house.svg"}, iconSize: 48, text: doc.name, fontSize: 24, global: true}]);
 }
 
 async function createHQ() {
