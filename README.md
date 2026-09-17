@@ -11,9 +11,9 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 - **Residents.** Each crew slot has a "lives here" box. The crew tab shows how many live in and the monthly rent.
 - **Workshop tab** only appears when a Tech is in the crew.
 
-## Install on The Forge
+## Install and update on The Forge
 
-Games Configuration, Import Wizard, ZIP File tab, turn off "Install found packages from the Bazaar", pick `UPLOAD TO FORGE/NuNu/Modules/nunu-headquarters/module.zip`, Analyze, Import. Restart the Foundry server, then enable the module in the world. Updates go the same way; the module has no manifest URL, so Foundry's update button ignores it.
+Drag the local `UPLOAD TO FORGE/NuNu/Modules/nunu-headquarters` folder into `modules` in the Forge Assets Library (choose Don't Unzip). First time: install in Foundry by pasting the manifest URL `https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json`. After that, drag the two files in again and press Update in Foundry's module list.
 
 ## Session 6 flow
 

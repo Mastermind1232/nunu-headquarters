@@ -32,5 +32,7 @@
       }
     ]
   },
-  "socket": true
+  "socket": true,
+  "manifest": "https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json",
+  "download": "https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.zip"
 }
