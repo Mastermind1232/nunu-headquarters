@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {ID, state, claim, slugify, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
+import {ID, state, claim, slugify, reducedRent, benefits, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
 
 test("slugify matches the system's skill keys", () => {
   assert.equal(slugify("Human Perception"), "humanPerception");
@@ -44,4 +44,11 @@ test("practice limit is one skill, two for Solos with the upgraded Training Area
   assert.equal(practiceLimit(state({improvements: {training: 1}}), ["solo"]), 1);
   assert.equal(practiceLimit(state({improvements: {training: 2}}), ["solo"]), 2);
   assert.equal(practiceLimit(state({improvements: {training: 2}}), ["fixer"]), 1);
+});
+
+test("rent reduction drops one row on the NuNu housing table", () => {
+  assert.equal(reducedRent(5000), 2500); assert.equal(reducedRent(7500), 5000); assert.equal(reducedRent(1500), 1000);
+  assert.equal(reducedRent(500), 250); assert.equal(reducedRent(0), 0);
+  assert.equal(benefits(state({rent: 5000})).monthlyRent, 5000);
+  assert.equal(benefits(state({rent: 5000, improvements: {rent: 1}})).monthlyRent, 2500);
 });

@@ -51,16 +51,14 @@
     {{#if s.workstationDebt}}<p class="notice">Restore the upgraded Workstation before other purchases.{{#if editable}} <button type="button" data-action="departure">Resolve Team Member departure</button>{{/if}}</p>{{/if}}
     <section class="tab" data-tab="info" data-group="hq">
     {{#if editable}}<div class="claim"><button type="button" data-action="claim"><i class="fas fa-flag"></i> Claim a place</button>
-      <span class="hint">Pick the scene of the place. The popup takes the starting Improvement, starting HQ IP, rent and beds.</span></div>{{/if}}
+      <span class="hint">Pick the place's scene. The popup asks for the starting Improvement, starting HQ IP, rent and beds.</span></div>{{/if}}
     <fieldset {{#unless editable}}disabled{{/unless}}>
-      <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>Crew name / notes<input name="crew" value="{{s.crew}}"></label></div>
+      <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>HQ scene<select name="sceneId" title="At-home bonuses apply while a crew token is in this scene and it is the active scene"><option value="">None</option>{{#each scenes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label></div>
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
-      <div class="fields three"><label>Original monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Reduced rent (discount, eb)<input type="number" min="0" step="1" name="reducedRent" value="{{s.reducedRent}}"></label><label>Original beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}"></label></div>
-      <div class="fields"><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
-      <label>HQ scene<select name="sceneId"><option value="">None</option>{{#each scenes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select><span class="hint">Lounge, Medbay, Studio and Evidence Wall bonuses go on a crew member's sheet while their token is in this scene and it is the active scene.</span></label>
+      <div class="fields three"><label>Monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}" title="Rent Reduction upgrades add beds, up to double this"></label><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
     </fieldset>
-    <section class="stats"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>Lifetime HQ IP spent</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span><button type="button" data-money="rent" data-available="{{assets.stash.canPayRent}}" {{#unless assets.stash.canPayRent}}disabled{{/unless}}>Pay</button></div><div><strong>{{b.beds}}</strong><span>Total beds</span></div></section>
-    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Award once per crew, equal to Group IP—not multiplied by members.</span></div>{{/if}}
+    <section class="stats three"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>HQ IP spent so far</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent{{#if rentReduced}}, down from {{s.rent}} with Rent Reduction{{/if}}</span></div></section>
+    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Once per crew, equal to the mission's Group IP. Clears practice bonuses.</span></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">
     <section class="hq-links"><h2>Crew <small>Six spaces · click a portrait to open its sheet</small></h2>
@@ -70,7 +68,7 @@
         {{#if ../editable}}{{#if uuid}}<button type="button" class="unlink" data-asset-action="clear-crew" data-slot="{{index}}" title="Unlink crew sheet">×</button>{{/if}}{{/if}}
         {{#if linked}}{{#if ../editable}}<label class="resident"><input type="checkbox" name="residents.{{index}}" {{checked resident}}> lives here</label>{{else}}{{#if resident}}<span class="resident">lives here</span>{{/if}}{{/if}}{{/if}}
       </div>{{/each}}</div>
-      <p class="hint">{{residentCount}} crew member(s) living here. Anyone living here stops paying their own housing and pays the HQ's rent instead. Monthly rent: <b>{{b.monthlyRent}}eb</b>.</p>
+      <p class="hint">{{residentCount}} living here. Residents pay the HQ's rent instead of their own housing. Monthly rent <b>{{b.monthlyRent}}eb</b>, {{b.beds}} beds.</p>
       {{#if editable}}<div class="crew-ip-toolbar"><button type="button" data-crew-ip><i class="fas fa-star" aria-hidden="true"></i> Award crew IP</button><button type="button" data-crew-money><i class="fas fa-coins" aria-hidden="true"></i> Award crew money</button></div>{{/if}}
       <p class="hint">The GM can drag and drop character sheets from the Actors directory into the six crew slots. Click a portrait to open its sheet.</p>
       <div class="hq-utilities"><div class="garage-slot" data-drop-zone="garage"><h3>Garage</h3>

@@ -31,7 +31,7 @@ export class HeadquartersSheet extends DocumentSheet {
     const soloTwo = ownedCharacters().some((a) => practiceLimit(s, actorRoles(a)) > 1);
     return {name: this.document.name, s, b: benefits(s), assets, w, editable: this.isEditable,
       scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "", residentCount: assets.crew.filter((c) => c.resident && c.linked).length,
-      showWorkshop: w.hasTech, situational, soloTwo,
+      showWorkshop: w.hasTech, situational, soloTwo, rentReduced: s.improvements.rent > 0 && s.rent > 0,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
       cards: catalog(s).map(c => ({...c, customUpgrades: c.custom ? c.upgrades : [], rank: s.improvements[c.id], owned: s.improvements[c.id] > 0,
@@ -120,10 +120,10 @@ export class HeadquartersSheet extends DocumentSheet {
     const updates = {};
     if (data.residents !== undefined) updates[`flags.${ID}.hq.residents`] = Array.from({length: 6}, (_, i) => Boolean(Array.isArray(data.residents) ? data.residents[i] : data.residents?.[i]));
     if (data.sceneId !== undefined) updates[`flags.${ID}.hq.sceneId`] = String(data.sceneId ?? "");
-    for (const key of ["location", "description", "notes", "crew", "rent", "reducedRent", "beds", "access", "faction", "purchaseCost"]) {
+    for (const key of ["location", "description", "notes", "rent", "beds", "access", "purchaseCost"]) {
       if (!(key in data)) continue;
       let value = data[key];
-      if (["rent", "reducedRent", "beds", "purchaseCost"].includes(key)) {
+      if (["rent", "beds", "purchaseCost"].includes(key)) {
         value = Number(value);
         if (!Number.isSafeInteger(value) || value < (key === "beds" ? 1 : 0)) throw new Error("Enter a valid non-negative whole number; original beds must be at least 1.");
         if (key === "beds" && value < s.improvements.rent - 1) throw new Error("Original beds cannot be lower than the purchased extra beds.");

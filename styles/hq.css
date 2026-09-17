@@ -35,3 +35,11 @@
 .nplh-benefit-dialog select,.nplh-benefit-dialog input,.nplh-benefit-dialog textarea{color:#191919;background:#fff;border:1px solid #7a7971}
 .nplh-benefit-dialog option{color:#191919;background:#fff}
 .nplh select option{color:#191919;background:#fff}
+
+/* NuNu palette and type, matched to the Cyberpunk RED system (Jost body, Rubik headers, CPR red). */
+.nplh .window-content,.nplh input,.nplh textarea,.nplh select,.nplh button{font-family:var(--cpr-font-primary,"Jost"),Arial,sans-serif}
+.nplh h1{font-family:var(--cpr-font-hero,"Rubik"),var(--cpr-font-primary,"Jost"),sans-serif;letter-spacing:.5px}
+.nplh .hq-header{border-top-color:#c62828}.nplh .hq-tabs .item.active{border-bottom-color:#c62828}.nplh h2{border-bottom-color:#c62828}
+.nplh .stats.three{grid-template-columns:repeat(3,1fr)}
+.nplh .fields.three label.check{align-self:end;margin-bottom:20px}
+.nplh .hint{font-size:11px;line-height:1.45}

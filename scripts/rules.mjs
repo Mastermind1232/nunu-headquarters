@@ -10,7 +10,7 @@ export const CATALOG = [
   ["lounge", "Lounge", 4, "Fixers gain +2 Bribery, Bureaucracy, Business, Conversation, Human Perception, Persuasion and Trading during meetings held here.", "Fixers and Medias gain +2 to checks arranging an in-person meeting within their Contacts/Clients or Access/Sources, as the GM decides."],
   ["medbay", "Medbay", 4, "Crew natural healing uses BODY +2. Medtechs gain +2 First Aid, Paramedic and Surgery here.", "Medtechs can use Science (Chemistry) for Maker-style street-drug upgrading, fabrication and invention; expertise equals Medical Tech skill level."],
   ["morale", "Morale Boost", 4, "Recreation or decoration reduces each crew member's monthly Lifestyle cost by 50eb.", "Up to ten upgrades; cumulative benefits with replacements shown below."],
-  ["rent", "Rent Reduction", 4, "Reduce rent by one Real Estate category, skipping corporate-provided rows. Cube Hotel becomes 100eb/month. Requires monthly rent. Enter the GM-calculated reduced rent below.", "Each upgrade adds one bed without raising rent, up to twice the original bed count. Extra rooms need GM agreement."],
+  ["rent", "Rent Reduction", 4, "The HQ's rent drops one row on the NuNu housing table. Requires a monthly rent.", "Each upgrade adds one bed without raising rent, up to twice the original bed count."],
   ["server", "Server Room", 4, "Build an HQ NET Architecture/security system with a 20,000eb allocation using Home Security 2045. Purchased assets cannot be removed or resold; leftover funds are forfeited.", "Netrunners use Electronics/Security Tech for Maker-style cyberdeck, hardware and program projects; expertise equals Interface Rank."],
   ["studio", "Studio", 5, "Rockerboys gain +2 Acting, Composition, Play Instrument, Paint/Draw/Sculpt and Photograph/Film while here.", "A Rockerboy can refine an art project for one week per cumulative +2 on required art checks. Failure allows another week; completion, abandonment or a natural 1 ends the refinement bonus. Fumble Recovery cannot prevent its loss."],
   ["training", "Training Area", 6, "One week practices one skill for +1: Athletics, Archery, Autofire, Brawling, Evasion, Handgun, Heavy Weapons, Martial Arts, Melee Weapon or Shoulder Arms. Expires on the next Group IP award or new practice.", "Solos may practice two different eligible skills at once."],
@@ -68,6 +68,13 @@ export function lose(raw, id) {
   s.improvements[id] = 0;
   return s;
 }
+/** NuNu housing table, monthly rent per row (Economic Tables). Rent Reduction moves one row down. */
+export const HOUSING = [500, 1000, 1500, 2500, 5000, 12500, 25000];
+export function reducedRent(rent) {
+  if (!Number.isFinite(rent) || rent <= 0) return 0;
+  const lower = HOUSING.filter((r) => r < rent);
+  return lower.length ? lower[lower.length - 1] : Math.floor(rent / 2);
+}
 export function benefits(raw) {
   const s = state(raw), m = Math.max(0, s.improvements.morale - 1), active = s.access;
   return {
@@ -75,7 +82,7 @@ export function benefits(raw) {
     luck: active ? Number(m >= 3) + Number(m >= 7) : 0,
     lifestyle: active && s.improvements.morale ? 50 : 0,
     beds: s.beds + Math.max(0, s.improvements.rent - 1),
-    monthlyRent: Math.max(0, s.rent - s.reducedRent),
+    monthlyRent: s.improvements.rent ? reducedRent(s.rent) : Math.max(0, s.rent),
     humanity: !active || m < 1 ? "None" : m >= 9 ? "2d6, keep highest" : m >= 4 ? "1d6" : "1d6 / 2 (round down)",
     hustle: !active || m < 6 ? "Normal" : m >= 8 ? "Roll twice; earn both" : "Roll twice; choose one",
     negotiation: active && m >= 5,
