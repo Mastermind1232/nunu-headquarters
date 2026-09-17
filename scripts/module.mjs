@@ -1,4 +1,4 @@
-import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, PRESETS, CATALOG, claim, SITUATIONAL, practiceLimit} from "./rules.mjs";
+import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, CATALOG, claim, SITUATIONAL, practiceLimit, STARTER_IP} from "./rules.mjs";
 import {customDialog, escapeHTML} from "./custom-improvements.mjs";
 import {runBenefit, ownedCharacters, moraleMode, clearPractice} from "./character-benefits.mjs";
 import {installApprovalHooks} from "./approval.mjs";
@@ -30,7 +30,6 @@ export class HeadquartersSheet extends DocumentSheet {
       bonus: s.improvements[id] >= 2 && def.upgraded ? Object.values(def.upgraded)[0] : def.bonus, skills: def.skills.join(", ")}));
     const soloTwo = ownedCharacters().some((a) => practiceLimit(s, actorRoles(a)) > 1);
     return {name: this.document.name, s, b: benefits(s), assets, w, editable: this.isEditable,
-      presets: PRESETS.map((p) => ({...p, starterName: CATALOG.find((c) => c.id === p.starter).name, selected: p.id === s.preset})),
       scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "", residentCount: assets.crew.filter((c) => c.resident && c.linked).length,
       showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
@@ -169,15 +168,28 @@ export class HeadquartersSheet extends DocumentSheet {
       s = purchase(latest, id);
       label = `Purchased ${name} (-${cost} HQ IP)`;
     } else if (action === "claim") {
-      const presetId = this.element.find("[data-preset]").val();
-      const preset = PRESETS.find((p) => p.id === presetId);
-      if (!preset) throw new Error("Pick a place to claim.");
-      const starter = catalog(s).find((c) => c.id === preset.starter).name;
-      if (!await Dialog.confirm({title: "Claim headquarters", content: `<p>Make <b>${escapeHTML(preset.name)}</b> the crew's headquarters?</p><p>Sets the name, location, rent (${preset.rent}eb) and beds, builds in <b>${escapeHTML(starter)}</b> for free, and awards <b>40 HQ IP</b>.</p>`})) return;
-      const claimed = claim(state(this.document.getFlag(ID, "hq")), preset.id);
-      s = claimed.s;
-      await this.document.update({name: preset.name});
-      label = `Claimed ${preset.name}: ${starter} built in, +40 HQ IP`;
+      const scenes = (game.scenes?.contents ?? []).slice().sort((x, y) => x.name.localeCompare(y.name));
+      if (!scenes.length) throw new Error("There are no scenes to claim.");
+      const sceneOpts = scenes.map((sc) => `<option value="${sc.id}"${sc.id === s.sceneId ? " selected" : ""}>${escapeHTML(sc.name)}</option>`).join("");
+      const starterOpts = `<option value="">None</option>` + catalog(s).map((c) => `<option value="${c.id}">${escapeHTML(c.name)}</option>`).join("");
+      const picked = await new Promise((resolve) => new Dialog({title: "Claim a place",
+        content: `<div class="nplh-benefit-dialog"><label>Scene<select name="sceneId">${sceneOpts}</select></label>
+          <label>Starting Improvement (built in, free)<select name="starter">${starterOpts}</select></label>
+          <label>Starting HQ IP<input name="ip" type="number" min="0" step="1" value="${STARTER_IP}"></label>
+          <label>Monthly rent (eb)<input name="rent" type="number" min="0" step="1" value="${s.rent}"></label>
+          <label>Beds<input name="beds" type="number" min="1" step="1" value="${s.beds}"></label>
+          <p>The scene's name and picture become the HQ's, and it becomes the HQ scene for the at-home bonuses.</p></div>`,
+        buttons: {claim: {label: "Claim", callback: (html) => resolve({sceneId: html.find('[name="sceneId"]').val(), starter: html.find('[name="starter"]').val(),
+          ip: Number(html.find('[name="ip"]').val()), rent: Number(html.find('[name="rent"]').val()), beds: Number(html.find('[name="beds"]').val())})},
+          cancel: {label: "Cancel", callback: () => resolve(null)}}, default: "claim", close: () => resolve(null)}, {width: 460}).render(true));
+      if (!picked || !this.isEditable) return;
+      const scene = game.scenes.get(picked.sceneId);
+      if (!scene) throw new Error("That scene no longer exists.");
+      s = claim(state(this.document.getFlag(ID, "hq")), picked);
+      s.image = scene.thumb || scene.background?.src || s.image || "";
+      await this.document.update({name: scene.name});
+      const starter = picked.starter ? catalog(s).find((c) => c.id === picked.starter)?.name : null;
+      label = `Claimed ${scene.name}` + (starter ? `: ${starter} built in` : "") + (picked.ip ? `, +${picked.ip} HQ IP` : "");
     } else if (action === "award") {
       const amount = award;
       if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(s.ip + amount)) throw new Error("Enter a positive whole HQ IP award.");

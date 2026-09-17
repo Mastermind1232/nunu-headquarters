@@ -19,7 +19,7 @@ export const CATALOG = [
 ].map(([id, name, page, base, upgrade]) => ({id, name, page, base, upgrade}));
 
 export function defaults() {
-  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], residents: [], sceneId: "", preset: "", garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
+  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], residents: [], sceneId: "", garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
 }
 export function state(raw = {}) {
   const d = defaults();
@@ -85,27 +85,18 @@ export function benefits(raw) {
 
 /* ---------------- NuNu additions ---------------- */
 
-/** The four places on the table in Session 6. Each comes with one Improvement built in. */
-export const PRESETS = [
-  {id: "tripleg", name: "Ganic Gains Gym", location: "Northwest Midtown, just north of Blue Block", rent: 5000, beds: 6, starter: "training",
-    description: "The Pure's refurbished basement gym, Triple G on the street. Gym, bunk room, lockers, lounge, back office."},
-  {id: "level16", name: "Level 16 North", location: "Green Block, floor 16 west", rent: 7500, beds: 6, starter: "morale",
-    description: "The Jokerz' old floor: three studios, three mini units, a hall and the armory."},
-  {id: "redclub", name: "The Red Club", location: "Midtown", rent: 5000, beds: 2, starter: "lounge",
-    description: "One of The Collector's clubs, hosted by the crew for 5,000eb a month and a favor every month."},
-  {id: "scavenger", name: "The Scavenger Site", location: "The Flats", rent: 0, beds: 4, starter: "medbay",
-    description: "The cleared harvester hideout: operating tables and cold storage, underground."},
-];
-
-/** Applies a preset: name is returned for the journal, the rest lands in the HQ record. Grants the starter IP. */
-export function claim(raw, presetId, grant = STARTER_IP) {
+/** Claims a place: the scene is the HQ's identity; everything else is typed at claim time. */
+export function claim(raw, {sceneId, starter = "", ip = STARTER_IP, rent = 0, beds = 1} = {}) {
   const s = state(raw);
-  const preset = PRESETS.find((x) => x.id === presetId);
-  if (!preset) throw new Error("Unknown headquarters preset.");
-  Object.assign(s, {location: preset.location, description: preset.description, rent: preset.rent, reducedRent: 0, beds: preset.beds, access: true, faction: false, preset: preset.id});
-  if (!s.improvements[preset.starter]) s.improvements[preset.starter] = 1;
-  s.ip += grant;
-  return {s, preset};
+  if (!sceneId) throw new Error("Pick the scene of the place being claimed.");
+  for (const [k, v, min] of [["ip", ip, 0], ["rent", rent, 0], ["beds", beds, 1]]) {
+    if (!Number.isSafeInteger(v) || v < min) throw new Error(`Enter a whole number for ${k}${min ? ` (at least ${min})` : ""}.`);
+  }
+  if (starter && !catalog(s).some((c) => c.id === starter)) throw new Error("Unknown starting Improvement.");
+  Object.assign(s, {sceneId, rent, reducedRent: 0, beds, access: true, faction: false});
+  if (starter && !s.improvements[starter]) s.improvements[starter] = 1;
+  s.ip += ip;
+  return s;
 }
 
 /** Same rule the system uses to turn a skill name into its bonus key (cpr-systemUtils.slugify, 0.92.4). */

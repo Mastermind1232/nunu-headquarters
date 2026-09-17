@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {ID, state, claim, PRESETS, slugify, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
+import {ID, state, claim, slugify, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
 
 test("slugify matches the system's skill keys", () => {
   assert.equal(slugify("Human Perception"), "humanPerception");
@@ -10,16 +10,17 @@ test("slugify matches the system's skill keys", () => {
   assert.equal(slugify("Library Search"), "librarySearch");
   assert.equal(slugify("Language (Streetslang)"), "languageStreetslang");
 });
-test("claiming a preset fills the place, builds in its Improvement and grants the starter IP", () => {
-  for (const p of PRESETS) {
-    const {s, preset} = claim(state(), p.id);
-    assert.equal(preset.id, p.id);
-    assert.equal(s.rent, p.rent); assert.equal(s.beds, p.beds); assert.equal(s.location, p.location);
-    assert.equal(s.improvements[p.starter], 1); assert.equal(s.ip, STARTER_IP); assert.equal(s.spent, 0);
-  }
-  const twice = claim(claim(state(), "tripleg").s, "tripleg");
-  assert.equal(twice.s.improvements.training, 1, "claiming again does not stack the free Improvement");
-  assert.throws(() => claim(state(), "nowhere"));
+test("claiming needs a scene, sets the place, builds in the starting Improvement and grants the starting IP", () => {
+  const s = claim(state(), {sceneId: "S1", starter: "training", ip: 40, rent: 5000, beds: 6});
+  assert.equal(s.sceneId, "S1"); assert.equal(s.rent, 5000); assert.equal(s.beds, 6);
+  assert.equal(s.improvements.training, 1); assert.equal(s.ip, 40); assert.equal(s.spent, 0);
+  const again = claim(s, {sceneId: "S1", starter: "training", ip: 0, rent: 5000, beds: 6});
+  assert.equal(again.improvements.training, 1, "claiming again does not stack the free Improvement");
+  assert.equal(claim(state(), {sceneId: "S2"}).ip, STARTER_IP, "starting IP defaults to 40");
+  assert.equal(claim(state(), {sceneId: "S2", starter: ""}).improvements.training, 0);
+  assert.throws(() => claim(state(), {}), /scene/);
+  assert.throws(() => claim(state(), {sceneId: "S1", starter: "nowhere"}), /Unknown/);
+  assert.throws(() => claim(state(), {sceneId: "S1", beds: 0}), /beds/);
 });
 test("situational bonuses depend on ownership, role and presence", () => {
   const s = state({improvements: {lounge: 1, medbay: 1, evidence: 2}});

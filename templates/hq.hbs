@@ -50,8 +50,8 @@
     {{#unless s.access}}<p class="notice">ACCESS LOST — HQ benefits are suspended.</p>{{/unless}}
     {{#if s.workstationDebt}}<p class="notice">Restore the upgraded Workstation before other purchases.{{#if editable}} <button type="button" data-action="departure">Resolve Team Member departure</button>{{/if}}</p>{{/if}}
     <section class="tab" data-tab="info" data-group="hq">
-    {{#if editable}}<div class="claim"><select data-preset>{{#each presets}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}} · {{rent}}eb/month · comes with {{starterName}}</option>{{/each}}</select><button type="button" data-action="claim"><i class="fas fa-flag"></i> Claim this place</button>
-      <span class="hint">Fills in the place, builds in its free Improvement, and awards the crew 40 HQ IP.</span></div>{{/if}}
+    {{#if editable}}<div class="claim"><button type="button" data-action="claim"><i class="fas fa-flag"></i> Claim a place</button>
+      <span class="hint">Pick the scene of the place. The popup takes the starting Improvement, starting HQ IP, rent and beds.</span></div>{{/if}}
     <fieldset {{#unless editable}}disabled{{/unless}}>
       <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>Crew name / notes<input name="crew" value="{{s.crew}}"></label></div>
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
