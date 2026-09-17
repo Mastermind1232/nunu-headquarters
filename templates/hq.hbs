@@ -66,9 +66,8 @@
         <button type="button" data-open="{{uuid}}" data-available="{{#if linked}}true{{else}}false{{/if}}" {{#unless linked}}disabled{{/unless}} title="{{name}}">
         {{#if image}}<img src="{{image}}" alt="{{name}} portrait">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></button>
         {{#if ../editable}}{{#if uuid}}<button type="button" class="unlink" data-asset-action="clear-crew" data-slot="{{index}}" title="Unlink crew sheet">×</button>{{/if}}{{/if}}
-        {{#if linked}}{{#if ../editable}}<label class="resident"><input type="checkbox" name="residents.{{index}}" {{checked resident}}> lives here</label>{{else}}{{#if resident}}<span class="resident">lives here</span>{{/if}}{{/if}}{{/if}}
       </div>{{/each}}</div>
-      <p class="hint">{{residentCount}} living here. Residents pay the HQ's rent instead of their own housing. Monthly rent <b>{{b.monthlyRent}}eb</b>, {{b.beds}} beds.</p>
+      <p class="hint">The whole crew lives here. Monthly rent <b>{{b.monthlyRent}}eb</b>, split evenly across the crew, paid from their own sheets. {{b.beds}} beds.</p>
       {{#if editable}}<div class="crew-ip-toolbar"><button type="button" data-crew-ip><i class="fas fa-star" aria-hidden="true"></i> Award crew IP</button><button type="button" data-crew-money><i class="fas fa-coins" aria-hidden="true"></i> Award crew money</button></div>{{/if}}
       <p class="hint">The GM can drag and drop character sheets from the Actors directory into the six crew slots. Click a portrait to open its sheet.</p>
       <div class="hq-utilities"><div class="garage-slot" data-drop-zone="garage"><h3>Garage</h3>

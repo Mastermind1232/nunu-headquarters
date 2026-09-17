@@ -8,7 +8,7 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 - **GM approval.** Every button a player presses (Heal, Humanity, Hustle, Pay lifestyle, Practice, Pay rent, Withdraw) sends the GM a popup instead of acting. Approve applies it to the sheet and the player gets a notification; Deny tells them. The GM's own clicks act at once. Improvement purchases stay GM-only.
 - **Bonuses while at the HQ.** Set the HQ scene on the HQ Info tab. While a crew member's token is in that scene and the scene is the active one, the Lounge, Medbay, Studio and Evidence Wall skill bonuses sit on their sheet as an Active Effect (role-checked). Leave the scene, or activate another, and the effect is removed. The active GM's client keeps this in sync.
 - **Training Area practice.** Practice puts +1 on the chosen combat skill as an Active Effect. Awarding HQ IP clears every practice bonus. Solos with the upgraded Training Area practice two skills.
-- **Residents and rent.** Each crew slot has a "lives here" box. Rent is one number the GM edits by hand; Rent Reduction is applied manually. No rent payment button; the crew pays from their own sheets.
+- **Rent.** One number the GM edits by hand, split evenly across the crew and paid from their own sheets. Rent Reduction is applied by editing the number.
 - **Workshop tab** only appears when a Tech is in the crew.
 
 ## Install and update on The Forge

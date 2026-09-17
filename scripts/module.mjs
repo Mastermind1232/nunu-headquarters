@@ -22,7 +22,6 @@ export class HeadquartersSheet extends DocumentSheet {
     const s = state(this.document.getFlag(ID, "hq"));
     const canUseBenefits = s.access && ownedCharacters().length > 0;
     const assets = await assetData(this.document);
-    assets.crew = assets.crew.map((c) => ({...c, resident: Boolean(s.residents?.[c.index])}));
     const w = await workshopView(this.document);
     const scenes = (game.scenes?.contents ?? []).map((sc) => ({id: sc.id, name: sc.name, selected: sc.id === s.sceneId}));
     const situational = Object.entries(SITUATIONAL).filter(([id]) => s.improvements[id] > 0).map(([id, def]) => ({
@@ -30,7 +29,7 @@ export class HeadquartersSheet extends DocumentSheet {
       bonus: s.improvements[id] >= 2 && def.upgraded ? Object.values(def.upgraded)[0] : def.bonus, skills: def.skills.join(", ")}));
     const soloTwo = ownedCharacters().some((a) => practiceLimit(s, actorRoles(a)) > 1);
     return {name: this.document.name, s, b: benefits(s), assets, w, editable: this.isEditable,
-      scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "", residentCount: assets.crew.filter((c) => c.resident && c.linked).length,
+      scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "",
       showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
@@ -118,7 +117,6 @@ export class HeadquartersSheet extends DocumentSheet {
     if (!this.isEditable) return;
     const s = state(this.document.getFlag(ID, "hq"));
     const updates = {};
-    if (data.residents !== undefined) updates[`flags.${ID}.hq.residents`] = Array.from({length: 6}, (_, i) => Boolean(Array.isArray(data.residents) ? data.residents[i] : data.residents?.[i]));
     if (data.sceneId !== undefined) updates[`flags.${ID}.hq.sceneId`] = String(data.sceneId ?? "");
     for (const key of ["location", "description", "notes", "rent", "beds", "access", "purchaseCost"]) {
       if (!(key in data)) continue;
