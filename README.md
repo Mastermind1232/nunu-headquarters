@@ -11,6 +11,7 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 - **Rent.** One number the GM edits by hand, split evenly across the crew and paid from their own sheets. Rent Reduction is applied by editing the number.
 - **Improvements table.** One row per Improvement, Base and Upgrade columns, a tick where owned and a Buy button where not; click a name for the rule text.
 - **Map pin.** Claiming drops a journal pin on the HQ scene that opens the sheet. Players need Display Notes on to see pins.
+- **Crew vote.** The Actors sidebar gets an **HQ Improvement** button under Wizards' button (renamed Player Improvement). It opens the HQ sheet on the Improvements tab, where each player votes for what the crew buys next; character portraits show the tally. The GM sees a **Lock in** button on any row with votes, which buys it and clears the votes.
 - **Workshop tab** only appears when a Tech is in the crew.
 
 ## Install and update on The Forge

@@ -1,4 +1,5 @@
-import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, CATALOG, claim, SITUATIONAL, practiceLimit, STARTER_IP} from "./rules.mjs";
+import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, CATALOG, claim, SITUATIONAL, practiceLimit, STARTER_IP, vote, votersFor} from "./rules.mjs";
+import {run, registerAction} from "./approval.mjs";
 import {customDialog, escapeHTML} from "./custom-improvements.mjs";
 import {runBenefit, ownedCharacters, moraleMode, clearPractice} from "./character-benefits.mjs";
 import {installApprovalHooks} from "./approval.mjs";
@@ -9,6 +10,10 @@ import {workshopView, bindWorkshop} from './workshop-ui.mjs';
 import {installWorkshopHooks} from './workshop-service.mjs';
 
 export class HeadquartersSheet extends DocumentSheet {
+  async _render(force, options = {}) {
+    await super._render(force, options);
+    if (options.tab) this._tabs?.[0]?.activate(options.tab);
+  }
   static get defaultOptions() {
     return foundry.utils.mergeObject(super.defaultOptions, {
       classes: ["nplh", "sheet"], template: `modules/${ID}/templates/hq.hbs`,
@@ -33,11 +38,14 @@ export class HeadquartersSheet extends DocumentSheet {
       showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],
+      canVote: !game.user.isGM && s.access,
       cards: catalog(s).map(c => {
         const rank = s.improvements[c.id], max = limit(s, c.id) - 1, ups = Math.max(0, rank - 1), error = purchaseError(s, c.id);
+        const voters = votersFor(s, c.id).map((uid) => { const u = game.users?.get(uid); return u ? {name: u.character?.name ?? u.name, img: u.character?.img || u.avatar || "icons/svg/mystery-man.svg"} : null; }).filter(Boolean);
         return {...c, customUpgrades: c.custom ? c.upgrades : [], rank, owned: rank > 0, upgraded: rank > 1, upgrades: ups, maxUpgrades: max, error,
           multi: max > 1, upgradeLabel: max > 1 ? `${ups} of ${max}` : "", upgradeDone: max > 0 && ups >= max, noUpgrade: max === 0,
-          canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max};
+          canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max,
+          voters, mine: s.votes[game.user?.id] === c.id, buyable: !error, next: rank === 0 ? "base" : "upgrade"};
       }),
       log: [...s.log].reverse().slice(0, 30)};
   }
@@ -66,6 +74,12 @@ export class HeadquartersSheet extends DocumentSheet {
         await runBenefit(this.document, event.currentTarget.dataset.benefit);
       } catch (e) { ui.notifications.error(e.message); }
       finally { this._benefitBusy = false; this._enableBenefitButtons(this.element); }
+    });
+    html.find("button[data-vote]").on("click", async (event) => {
+      event.preventDefault();
+      const id = event.currentTarget.dataset.vote, name = catalog(state(this.document.getFlag(ID, "hq"))).find((c) => c.id === id)?.name ?? id;
+      try { await run(this.document, "vote", {improvement: id}, `${game.user.name} votes for ${name}.`, {silent: true}); }
+      catch (e) { ui.notifications.error(e.message); }
     });
     if (!this.isEditable) return;
     html.find('[data-crew-ip], [data-crew-money]').on('click', async event => {
@@ -192,6 +206,14 @@ export class HeadquartersSheet extends DocumentSheet {
       await pinOnScene(scene, this.document).catch((e) => ui.notifications.warn(`HQ claimed, but no pin was placed: ${e.message}`));
       const starter = picked.starter ? catalog(s).find((c) => c.id === picked.starter)?.name : null;
       label = `Claimed ${scene.name}` + (starter ? `: ${starter} built in` : "") + (picked.ip ? `, +${picked.ip} HQ IP` : "");
+    } else if (action === "lockin") {
+      const error = purchaseError(s, id);
+      if (error) throw new Error(error);
+      const name = catalog(s).find(c => c.id === id).name, cost = s.purchaseCost, voters = votersFor(s, id).length;
+      if (!await Dialog.confirm({title: "Lock in the crew's vote", content: `<p>Buy <b>${escapeHTML(name)}</b> for ${cost} HQ IP? ${voters} vote(s) for it. All votes are cleared afterwards.</p>`})) return;
+      s = purchase(state(this.document.getFlag(ID, "hq")), id);
+      s.votes = {};
+      label = `Locked in ${name} from the crew's vote (-${cost} HQ IP)`;
     } else if (action === "award") {
       const amount = award;
       if (!Number.isSafeInteger(amount) || amount <= 0 || !Number.isSafeInteger(s.ip + amount)) throw new Error("Enter a positive whole HQ IP award.");
@@ -233,6 +255,28 @@ async function createHQ() {
   doc.sheet.render(true);
   return doc;
 }
+registerAction("vote", async (hq, {improvement}, user) => {
+  await hq.setFlag(ID, "hq", vote(state(hq.getFlag(ID, "hq")), user.id, improvement));
+});
+
+/** The Actors sidebar: rename Wizards' "Improvement" to "Player Improvement" and add "HQ Improvement" under it. */
+function decorateActorDirectory(html) {
+  const root = html instanceof HTMLElement ? html : html[0];
+  if (!root || root.querySelector(".nunu-hq-improvement")) return;
+  const wizards = Array.from(root.querySelectorAll("button")).find((b) => b.textContent.trim() === "Improvement");
+  if (wizards) wizards.innerHTML = wizards.innerHTML.replace(/Improvement\s*$/, "Player Improvement");
+  const btn = document.createElement("button");
+  btn.type = "button"; btn.className = "nunu-hq-improvement";
+  btn.innerHTML = '<i class="fas fa-house"></i> HQ Improvement';
+  btn.addEventListener("click", () => {
+    const hqs = game.journal.filter((j) => j.getFlag(ID, "hq") && j.testUserPermission(game.user, "OBSERVER"));
+    if (!hqs.length) return ui.notifications.warn("No headquarters has been shared with you yet.");
+    hqs[0].sheet.render(true, {tab: "improvements"});
+  });
+  if (wizards?.parentElement) wizards.parentElement.insertBefore(btn, wizards.nextSibling);
+  else (root.querySelector(".directory-footer") ?? root).appendChild(btn);
+}
+
 Hooks.once("init", () => {
   installWorkshopHooks();
   installApprovalHooks();
@@ -250,6 +294,7 @@ Hooks.on('updateActor', actor => {
     for (const app of Object.values(journal.apps)) if (app instanceof HeadquartersSheet && app.rendered) app.render(false);
   }
 });
+Hooks.on("renderActorDirectory", (app, html) => { setTimeout(() => decorateActorDirectory(html), 60); });
 Hooks.on("renderJournalDirectory", (app, html) => {
   if (!game.user.isGM || html.find(".nplh-create").length) return;
   const button = $('<button type="button" class="nplh-create"><i class="fas fa-house"></i> Create Headquarters</button>');

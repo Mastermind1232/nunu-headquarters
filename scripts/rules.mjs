@@ -19,12 +19,12 @@ export const CATALOG = [
 ].map(([id, name, page, base, upgrade]) => ({id, name, page, base, upgrade}));
 
 export function defaults() {
-  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], residents: [], sceneId: "", garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
+  return {schema: 1, purchaseCost: COST, image: "", crewSlots: [], residents: [], sceneId: "", votes: {}, garageUuid: "", stashUuid: "", ip: 0, spent: 0, location: "", description: "", notes: "", crew: "", rent: 0, reducedRent: 0, beds: 1, access: true, faction: false, workstationDebt: false, improvements: Object.fromEntries(CATALOG.map(x => [x.id, 0])), log: []};
 }
 export function state(raw = {}) {
   const d = defaults();
   const customImprovements = (raw.customImprovements ?? []).map(c => ({...c, upgrades: [...c.upgrades]}));
-  return {...d, ...raw, customImprovements, improvements: {...d.improvements, ...Object.fromEntries(customImprovements.map(c => [c.id, 0])), ...raw.improvements}, log: [...(raw.log ?? [])]};
+  return {...d, ...raw, customImprovements, votes: {...(raw.votes ?? {})}, improvements: {...d.improvements, ...Object.fromEntries(customImprovements.map(c => [c.id, 0])), ...raw.improvements}, log: [...(raw.log ?? [])]};
 }
 export function catalog(s) { return [...CATALOG, ...(s.customImprovements ?? []).map(c => ({...c, custom: true}))]; }
 export function saveCustom(raw, entry) {
@@ -134,3 +134,12 @@ export function desiredSituational(raw, roles, present) {
 }
 /** How many skills a practice covers: Solos with the upgrade get two. */
 export function practiceLimit(raw, roles) { const s = state(raw); return s.improvements.training >= 2 && roles.includes("solo") ? 2 : 1; }
+
+/** Records or clears a user's vote for the next purchase. Voting for the same row again removes the vote. */
+export function vote(raw, userId, improvementId) {
+  const s = state(raw);
+  if (improvementId && !catalog(s).some((c) => c.id === improvementId)) throw new Error("Unknown improvement.");
+  if (!improvementId || s.votes[userId] === improvementId) delete s.votes[userId]; else s.votes[userId] = improvementId;
+  return s;
+}
+export const votersFor = (raw, improvementId) => Object.entries(state(raw).votes).filter(([, id]) => id === improvementId).map(([userId]) => userId);

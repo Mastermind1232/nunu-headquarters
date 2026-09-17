@@ -60,3 +60,12 @@
 .nplh table.improvements details[open] summary::before{content:"\25BE"}
 .nplh table.improvements summary small{font-weight:normal;color:#8ea0b5;font-size:10px;margin-left:6px}
 .nplh table.improvements details p,.nplh table.improvements details ol{font-size:12px;line-height:1.5;margin:6px 0 4px 14px;color:#d6e0ea}
+
+.nplh table.improvements th:nth-child(4){text-align:center;width:150px}
+.nplh table.improvements td.votes{white-space:nowrap}
+.nplh .voters{display:inline-flex;gap:2px;vertical-align:middle;margin-right:6px}
+.nplh .voters img{width:26px;height:26px;border-radius:50%;object-fit:cover;border:1px solid #75e0d7;background:#0d131c}
+.nplh table.improvements td.votes button{width:auto;padding:4px 10px;font-size:11px}
+.nplh table.improvements td.votes button.mine{background:#1f5f6b;border-color:#75e0d7}
+.nplh table.improvements td.votes button.lockin{background:#5a1f1f;border-color:#c62828}
+.nunu-hq-improvement{margin-top:4px}

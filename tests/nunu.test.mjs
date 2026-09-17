@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {ID, state, claim, slugify, benefits, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
+import {ID, state, claim, slugify, benefits, vote, votersFor, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
 
 test("slugify matches the system's skill keys", () => {
   assert.equal(slugify("Human Perception"), "humanPerception");
@@ -49,4 +49,12 @@ test("practice limit is one skill, two for Solos with the upgraded Training Area
 test("rent is a plain number the GM edits; Rent Reduction changes nothing automatically", () => {
   assert.equal(benefits(state({rent: 5000})).monthlyRent, 5000);
   assert.equal(benefits(state({rent: 5000, improvements: {rent: 1}})).monthlyRent, 5000);
+});
+
+test("votes: one per user, toggled off by voting again, listed per improvement", () => {
+  let s = vote(state(), "u1", "lounge"); s = vote(s, "u2", "lounge"); s = vote(s, "u3", "medbay");
+  assert.deepEqual(votersFor(s, "lounge"), ["u1", "u2"]); assert.deepEqual(votersFor(s, "medbay"), ["u3"]);
+  s = vote(s, "u1", "medbay"); assert.deepEqual(votersFor(s, "lounge"), ["u2"]);
+  s = vote(s, "u1", "medbay"); assert.deepEqual(votersFor(s, "medbay"), ["u3"], "voting again removes the vote");
+  assert.throws(() => vote(s, "u1", "nowhere"), /Unknown/);
 });

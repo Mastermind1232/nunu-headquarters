@@ -15,12 +15,12 @@ async function perform(hq, action, payload, requester) {
 }
 
 /** Runs an action as the GM, or sends it to the GM for approval. `summary` is the sentence the GM reads. */
-export async function run(hq, action, payload, summary) {
+export async function run(hq, action, payload, summary, {silent = false} = {}) {
   if (game.user.isGM) return perform(hq, action, payload, game.user);
   const gm = activeGM();
-  if (!gm) throw new Error("No GM is online to approve this.");
-  game.socket.emit(SOCKET, {type: "request", hqUuid: hq.uuid, action, payload, summary, userId: game.user.id});
-  ui.notifications.info(`Sent to the GM for approval: ${summary}`);
+  if (!gm) throw new Error("No GM is online right now.");
+  game.socket.emit(SOCKET, {type: "request", hqUuid: hq.uuid, action, payload, summary, userId: game.user.id, silent});
+  if (!silent) ui.notifications.info(`Sent to the GM for approval: ${summary}`);
   return null;
 }
 
@@ -35,6 +35,10 @@ export function installApprovalHooks() {
       const user = game.users.get(msg.userId);
       if (!hq || !user) return;
       if (!hq.testUserPermission(user, "OBSERVER")) return reply(user.id, false, "You no longer have access to this HQ.");
+      if (msg.silent) {
+        try { await perform(hq, msg.action, msg.payload, user); } catch (e) { reply(user.id, false, e.message); }
+        return;
+      }
       const ok = await Dialog.confirm({title: `${user.name} asks`, content: `<p>${escapeHTML(msg.summary)}</p><p>Approve?</p>`, defaultYes: true});
       if (!ok) return reply(user.id, false, `Denied by the GM: ${msg.summary}`);
       try {
