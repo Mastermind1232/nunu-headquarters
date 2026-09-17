@@ -13,11 +13,7 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 
 ## Install on The Forge
 
-Upload `module.json` and `module.zip` to the Forge assets library under `modules/nunu-headquarters/`, then install by manifest URL:
-
-```
-https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json
-```
+Games Configuration, Import Wizard, ZIP File tab, turn off "Install found packages from the Bazaar", pick `UPLOAD TO FORGE/NuNu/Modules/nunu-headquarters/module.zip`, Analyze, Import. Restart the Foundry server, then enable the module in the world. Updates go the same way; the module has no manifest URL, so Foundry's update button ignores it.
 
 ## Session 6 flow
 
