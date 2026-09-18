@@ -1,6 +1,6 @@
 # NuNu Headquarters
 
-Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home module (v0.6.1, unlicensed; not for redistribution). Foundry VTT 12, Cyberpunk RED Core 0.92.4.
+Build for the NuNu campaign, derived from SleepingM4n's [No Place Like Home](https://github.com/SleepingM4n/no-place-like-home) module (v0.6.1). All credit for the base sheet, rules engine, stash, workshop and tests goes to Sleepingman. This repository exists to serve one game table. Foundry VTT 12, Cyberpunk RED Core 0.92.4.
 
 ## What this build adds
 
@@ -14,9 +14,15 @@ Private build for the NuNu campaign, based on SleepingM4n's No Place Like Home m
 - **Crew vote.** The Actors sidebar gets an **HQ Improvement** button under Wizards' button (renamed Player Improvement). It opens the HQ sheet on the Improvements tab, where each player votes for what the crew buys next; character portraits show the tally. The GM sees a **Lock in** button on any row with votes, which buys it and clears the votes.
 - **Workshop tab** only appears when a Tech is in the crew.
 
-## Install and update on The Forge
+## Install and update
 
-Drag the local `UPLOAD TO FORGE/NuNu/Modules/nunu-headquarters` folder into `modules` in the Forge Assets Library (choose Don't Unzip). First time: install in Foundry by pasting the manifest URL `https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json`. After that, drag the two files in again and press Update in Foundry's module list.
+Install by manifest URL:
+
+```
+https://raw.githubusercontent.com/Mastermind1232/nunu-headquarters/main/module.json
+```
+
+New versions are GitHub releases with a `module.zip`; Foundry's Update button picks them up.
 
 ## Session 6 flow
 

@@ -3,7 +3,7 @@
   "title": "NuNu Headquarters",
   "description": "Private NuNu build of the No Place Like Home headquarters sheet: claim presets, GM approval for player actions, scene-based bonuses, Training Area practice.",
   "version": "1.2.0",
-  "url": "https://github.com/SleepingM4n/no-place-like-home",
+  "url": "https://github.com/Mastermind1232/nunu-headquarters",
   "compatibility": {
     "minimum": "12",
     "verified": "12",
@@ -33,6 +33,6 @@
     ]
   },
   "socket": true,
-  "manifest": "https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.json",
-  "download": "https://assets.forge-vtt.com/6a7ca306f6a96908b438164c/modules/nunu-headquarters/module.zip"
+  "manifest": "https://raw.githubusercontent.com/Mastermind1232/nunu-headquarters/main/module.json",
+  "download": "https://github.com/Mastermind1232/nunu-headquarters/releases/download/v1.2.0/module.zip"
 }
