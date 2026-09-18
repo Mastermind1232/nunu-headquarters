@@ -53,7 +53,7 @@
 .nplh table.improvements td.cell{text-align:center;white-space:nowrap}
 .nplh table.improvements td.tools{width:100px;text-align:right}
 .nplh table.improvements td.tools button{width:auto;padding:4px 7px;font-size:11px;margin-left:4px}
-.nplh table.improvements .tick{color:#75e0d7;font-weight:bold}.nplh table.improvements .dash{color:#5d6c80}.nplh table.improvements .count{margin-right:6px;color:#bac8d9;font-size:12px}
+.nplh table.improvements .tick{color:#75e0d7;font-weight:bold}.nplh table.improvements .dash{color:#5d6c80}.nplh table.improvements .count{margin-left:8px;color:#bac8d9;font-size:12px}
 .nplh table.improvements td.cell button{width:auto;padding:4px 10px;font-size:11px}
 .nplh table.improvements summary{color:#e8edf4;font-size:14px;font-weight:bold;list-style:none;cursor:pointer}
 .nplh table.improvements summary::-webkit-details-marker{display:none}.nplh table.improvements summary::before{content:"\25B8";display:inline-block;width:14px;color:#75e0d7}
@@ -69,3 +69,4 @@
 .nplh table.improvements td.votes button.mine{background:#1f5f6b;border-color:#75e0d7}
 .nplh table.improvements td.votes button.lockin{background:#5a1f1f;border-color:#c62828}
 .nunu-hq-improvement{margin-top:4px}
+.nplh table.improvements td.cell{text-align:left}.nplh table.improvements th:nth-child(2),.nplh table.improvements th:nth-child(3){text-align:left;width:150px}
