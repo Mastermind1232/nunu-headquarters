@@ -84,3 +84,4 @@
 .nplh table.improvements td.votes button.mine{background:#1f5f6b !important;border-color:#75e0d7 !important}
 .nplh .crew-slot>button:first-child{background:transparent !important;border:0 !important}
 .nplh .hq-picture button{background:#26394e !important}
+.nplh .stats.two{grid-template-columns:repeat(2,1fr)}
