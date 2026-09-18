@@ -12,7 +12,6 @@
     <a class="item" data-tab="benefits" data-group="hq" tabindex="0">Active Crew Benefits</a>
     <a class="item" data-tab="improvements" data-group="hq" tabindex="0">Improvements & Upgrades</a>
     {{#if showWorkshop}}<a class="item" data-tab="workshop" data-group="hq" tabindex="0">Workshop</a>{{/if}}
-    <a class="item" data-tab="activity" data-group="hq" tabindex="0">Recent Activity</a>
   </nav>
   <main class="hq-body">
     {{#if showWorkshop}}<section class="tab nplh-workshop" data-tab="workshop" data-group="hq">
@@ -58,7 +57,8 @@
       <div class="fields three"><label>Monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}" title="Rent Reduction upgrades add beds, up to double this"></label><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
     </fieldset>
     <section class="stats two"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span></div></section>
-    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button></div>{{/if}}
+    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button></div>
+    <div class="danger"><button type="button" data-action="destroy" class="destroy"><i class="fas fa-house-crack"></i> Record HQ destruction</button></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">
     <section class="hq-links"><h2>Crew</h2>
@@ -110,11 +110,6 @@
       <td class="cell votes"><span class="voters">{{#each voters}}<img src="{{img}}" title="{{name}}" alt="{{name}}">{{/each}}</span>{{#if ../canVote}}{{#if buyable}}<button type="button" data-vote="{{id}}" class="{{#if mine}}mine{{/if}}">{{#if mine}}<i class="fas fa-check"></i> Voted{{else}}Vote{{/if}}</button>{{/if}}{{/if}}{{#if ../editable}}{{#if voters.length}}<button type="button" data-action="lockin" data-id="{{id}}" class="lockin" {{#unless buyable}}disabled title="{{error}}"{{/unless}}><i class="fas fa-lock"></i> Lock in</button>{{/if}}{{/if}}</td>
       {{#if ../editable}}<td class="cell tools">{{#if owned}}<button type="button" class="loss" data-action="lose" data-id="{{id}}" title="Remove without refund">Lost</button>{{/if}}{{#if custom}}<button type="button" data-action="custom-edit" data-id="{{id}}" title="Edit"><i class="fas fa-pen"></i></button><button type="button" data-action="custom-delete" data-id="{{id}}" title="Delete"><i class="fas fa-trash"></i></button>{{/if}}</td>{{/if}}
     </tr>{{/each}}</tbody></table>
-    </section>
-    <section class="tab" data-tab="activity" data-group="hq">
-    <h2>Recent activity</h2><ol class="log">{{#each log}}<li><b>{{label}}</b><br><small>{{date}} · {{user}}</small></li>{{else}}<li>No purchases or awards yet.</li>{{/each}}</ol>
-    {{#if editable}}<button type="button" data-action="destroy" class="destroy">Record HQ destruction</button>{{/if}}
-    <p class="source">NuNu private build on SleepingM4n's No Place Like Home module. Rules from R. Talsorian Games' No Place Like Home (2024).</p>
     </section>
   </main>
 </form>
