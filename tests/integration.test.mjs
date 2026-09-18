@@ -47,7 +47,7 @@ test("sheet purchase persists IP, rank and activity", async () => {
 });
 test("award is captured before form submission can rerender", async () => {
   const app = sheet(); app.submit = async () => {app.element.find = () => ({val: () => "40"});};
-  await app.act("award"); assert.equal(app.document.hq.ip, 100);
+  await app.act("award", null, 60); assert.equal(app.document.hq.ip, 100);
 });
 test("custom purchase cost appears in confirmation, deduction and activity", async () => {
   const app=sheet();app.document.hq.purchaseCost=15;
