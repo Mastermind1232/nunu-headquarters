@@ -36,6 +36,7 @@ export class HeadquartersSheet extends DocumentSheet {
     const soloTwo = ownedCharacters().some((a) => practiceLimit(s, actorRoles(a)) > 1);
     return {name: this.document.name, s, b: benefits(s), assets, w, editable: this.isEditable,
       scenes, sceneName: scenes.find((x) => x.selected)?.name ?? "",
+      districts: ["", "Financial District", "Midtown", "The Flats"].map((d) => ({value: d, label: d || "Pick a district", selected: d === s.location})),
       showWorkshop: w.hasTech, situational, soloTwo,
       canUseBenefits, canRecoverHumanity: canUseBenefits && Boolean(moraleMode(s).humanityFormula),
       customBenefits: s.access ? s.customImprovements.filter(c => s.improvements[c.id] > 0).map(c => ({...c, acquiredUpgrades: c.upgrades.slice(0, s.improvements[c.id] - 1)})) : [],

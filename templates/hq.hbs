@@ -52,7 +52,7 @@
     {{#if editable}}<div class="claim"><button type="button" data-action="claim"><i class="fas fa-flag"></i> Claim a place</button>
       <span class="hint">Pick the place's scene. The popup asks for the starting Improvement, starting HQ IP, rent and beds.</span></div>{{/if}}
     <fieldset {{#unless editable}}disabled{{/unless}}>
-      <div class="fields"><label>Location<input name="location" value="{{s.location}}"></label><label>HQ scene<select name="sceneId" title="At-home bonuses apply while a crew token is in this scene and it is the active scene"><option value="">None</option>{{#each scenes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label></div>
+      <div class="fields"><label>District<select name="location">{{#each districts}}<option value="{{value}}" {{#if selected}}selected{{/if}}>{{label}}</option>{{/each}}</select></label><label>HQ scene<select name="sceneId" title="At-home bonuses apply while a crew token is in this scene and it is the active scene"><option value="">None</option>{{#each scenes}}<option value="{{id}}" {{#if selected}}selected{{/if}}>{{name}}</option>{{/each}}</select></label></div>
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
       <div class="fields three"><label>Monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}" title="Rent Reduction upgrades add beds, up to double this"></label><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
     </fieldset>
