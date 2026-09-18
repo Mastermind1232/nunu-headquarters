@@ -102,9 +102,8 @@
     <label>Notes / training expiry / projects / selected Team Member<textarea name="notes" rows="5" {{#unless editable}}disabled{{/unless}}>{{s.notes}}</textarea></label>
     </section>
     <section class="tab" data-tab="improvements" data-group="hq">
-    <h2>Improvements & upgrades <small>{{s.purchaseCost}} HQ IP per purchase</small></h2>
-    {{#if editable}}<label class="purchase-cost">Cost for every improvement or upgrade (HQ IP)<input type="number" name="purchaseCost" min="0" step="1" value="{{s.purchaseCost}}"><span class="hint">Default: 40. Applies to future purchases for this HQ; previous spending stays recorded at its original cost.</span></label>{{/if}}
-    {{#if editable}}<button type="button" data-action="custom-add">Add custom improvement</button><p class="hint">Create a name, base benefit and ordered upgrade benefits. Custom purchases use the same HQ IP cost; apply their effects manually.</p>{{/if}}
+    <h2>Improvements & upgrades</h2>
+    {{#if editable}}<button type="button" data-action="custom-add">Add custom improvement</button>{{/if}}
     {{#if canVote}}<p class="hint">Vote for what the crew buys next. One vote each; click again to take it back. The GM locks in the winner.</p>{{/if}}
     <table class="improvements"><thead><tr><th>Improvement</th><th>Base</th><th>Upgraded</th><th>Votes</th>{{#if editable}}<th></th>{{/if}}</tr></thead><tbody>
     {{#each cards}}<tr class="{{#if owned}}owned{{/if}}">
