@@ -85,6 +85,14 @@ export class HeadquartersSheet extends DocumentSheet {
       catch (e) { ui.notifications.error(e.message); }
     });
     if (!this.isEditable) return;
+    html.find("[data-award-ip]").on("click", async () => {
+      const amount = await new Promise((resolve) => new Dialog({title: "Award HQ IP",
+        content: `<div class="nplh-benefit-dialog"><label>HQ IP to award<input name="ip" type="number" min="1" step="1" value="40"></label><p>Once per crew, equal to the mission's Group IP. Practice bonuses expire.</p></div>`,
+        buttons: {award: {label: "Award", callback: (h) => resolve(Number(h.find('[name=ip]').val()))}, cancel: {label: "Cancel", callback: () => resolve(null)}},
+        default: "award", close: () => resolve(null)}, {width: 360}).render(true));
+      if (amount === null) return;
+      this._queue = (this._queue ?? Promise.resolve()).then(() => this.act("award", null, amount)).catch((e) => ui.notifications.error(e.message));
+    });
     html.find("[data-edit-rent]").on("click", async () => {
       const s = state(this.document.getFlag(ID, "hq"));
       const value = await new Promise((resolve) => new Dialog({title: "Monthly rent",
@@ -161,9 +169,9 @@ export class HeadquartersSheet extends DocumentSheet {
     if (data.name !== undefined) updates.name = String(data.name).trim() || "Headquarters";
     await this.document.update(updates);
   }
-  async act(action, id) {
+  async act(action, id, extra) {
     if (!this.isEditable) return;
-    const award = Number(this.element.find("[data-award]").val());
+    const award = Number(extra);
     await this.submit();
     let s = state(this.document.getFlag(ID, "hq"));
     let label;

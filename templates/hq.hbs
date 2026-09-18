@@ -56,9 +56,8 @@
       <label>Description<textarea name="description" rows="2">{{s.description}}</textarea></label>
       <div class="fields"><label>Beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}" title="Rent Reduction upgrades add beds, up to double this"></label><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
     </fieldset>
-    <section class="stats two"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div class="{{#if editable}}editable{{/if}}" {{#if editable}}data-edit-rent title="Click to change the rent"{{/if}}><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent{{#if editable}} <i class="fas fa-pen"></i>{{/if}}</span></div></section>
-    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button></div>
-    <div class="danger"><button type="button" data-action="destroy" class="destroy"><i class="fas fa-house-crack"></i> Record HQ destruction</button></div>{{/if}}
+    <section class="stats two"><div class="{{#if editable}}editable{{/if}}" {{#if editable}}data-award-ip title="Click to award HQ IP"{{/if}}><strong>{{s.ip}}</strong><span>Available HQ IP{{#if editable}} <i class="fas fa-pen"></i>{{/if}}</span></div><div class="{{#if editable}}editable{{/if}}" {{#if editable}}data-edit-rent title="Click to change the rent"{{/if}}><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent{{#if editable}} <i class="fas fa-pen"></i>{{/if}}</span></div></section>
+    {{#if editable}}<div class="danger"><button type="button" data-action="destroy" class="destroy"><i class="fas fa-house-crack"></i> Record HQ destruction</button></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">
     <section class="hq-links"><h2>Crew</h2>
