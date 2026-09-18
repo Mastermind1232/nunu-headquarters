@@ -103,7 +103,6 @@
     </section>
     <section class="tab" data-tab="improvements" data-group="hq">
     <h2>Improvements & upgrades</h2>
-    {{#if editable}}<button type="button" data-action="custom-add">Add custom improvement</button>{{/if}}
     {{#if canVote}}<p class="hint">Vote for what the crew buys next. One vote each; click again to take it back. The GM locks in the winner.</p>{{/if}}
     <table class="improvements"><thead><tr><th>Improvement</th><th>Base</th><th>Upgraded</th><th>Votes</th>{{#if editable}}<th></th>{{/if}}</tr></thead><tbody>
     {{#each cards}}<tr class="{{#if owned}}owned{{/if}}">
