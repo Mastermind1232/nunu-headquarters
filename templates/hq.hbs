@@ -84,12 +84,11 @@
     </section>
     <section class="tab" data-tab="benefits" data-group="hq">
     <h2>Active crew benefits</h2>
-    <p class="hint">What the HQ gives the crew right now. Healing and Hustle bonuses are used by the calendar's downtime; the rest apply on their own or on request.</p>
     <div class="benefits">
-    <p>Natural healing: <b>BODY +{{b.healing}}</b> per day of rest <span class="hint">(applied by the calendar when a week passes)</span></p>
+    <p>Natural healing: <b>BODY +{{b.healing}}</b> per day of rest </p>
     <p>LUCK increase: <b>+{{b.luck}}</b></p>
     <p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p>
-    <p>Hustle: <b>{{b.hustle}}</b> <span class="hint">(applied by the calendar when a week passes)</span></p>
+    <p>Hustle: <b>{{b.hustle}}</b> </p>
     <div class="benefit-row"><p>Monthly Humanity: <b>{{b.humanity}}</b></p><button type="button" data-benefit="humanity" {{#unless canRecoverHumanity}}disabled{{/unless}}><i class="fas fa-dice" aria-hidden="true"></i> Roll & restore…</button></div>
     {{#if s.improvements.training}}<div class="benefit-row"><p>Training Area: <b>+1</b> to one combat skill for a week of practice, until the next HQ IP award{{#if soloTwo}} (Solos: two skills){{/if}}</p><button type="button" data-benefit="practice" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-dumbbell" aria-hidden="true"></i> Practice…</button></div>{{/if}}
     {{#each situational}}<p class="situational"><b>{{name}}</b>, while in the HQ scene: {{roles}} +{{bonus}} to {{skills}}.</p>{{/each}}
