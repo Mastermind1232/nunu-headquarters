@@ -85,6 +85,16 @@ export class HeadquartersSheet extends DocumentSheet {
       catch (e) { ui.notifications.error(e.message); }
     });
     if (!this.isEditable) return;
+    html.find("[data-edit-rent]").on("click", async () => {
+      const s = state(this.document.getFlag(ID, "hq"));
+      const value = await new Promise((resolve) => new Dialog({title: "Monthly rent",
+        content: `<div class="nplh-benefit-dialog"><label>Monthly rent (eb)<input name="rent" type="number" min="0" step="1" value="${s.rent}"></label><p>One number for the whole crew, split evenly and paid from their own sheets.</p></div>`,
+        buttons: {save: {label: "Save", callback: (h) => resolve(Number(h.find('[name=rent]').val()))}, cancel: {label: "Cancel", callback: () => resolve(null)}},
+        default: "save", close: () => resolve(null)}, {width: 360}).render(true));
+      if (value === null) return;
+      if (!Number.isSafeInteger(value) || value < 0) return ui.notifications.error("Enter a whole number of eddies.");
+      await this.document.update({[`flags.${ID}.hq.rent`]: value});
+    });
     html.find('[data-crew-ip], [data-crew-money]').on('click', async event => {
       event.preventDefault();
       if (this._crewIPBusy) return;

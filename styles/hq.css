@@ -94,3 +94,4 @@
 .nplh .crew-slot i{height:150px;width:100%;justify-content:center}
 .nplh .crew-slot span{display:block;width:100%;padding:6px 4px;background:#0d131c;font-size:12px;font-weight:bold;color:#e8edf4;text-align:center}
 .nplh .crew-slot .unlink{top:4px;right:4px;border-radius:3px;opacity:.85}
+.nplh .stats div.editable{cursor:pointer}.nplh .stats div.editable:hover{border-color:#75e0d7}.nplh .stats div.editable i{font-size:10px;margin-left:4px;color:#75e0d7}
