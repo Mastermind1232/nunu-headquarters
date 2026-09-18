@@ -143,3 +143,39 @@ export function vote(raw, userId, improvementId) {
   return s;
 }
 export const votersFor = (raw, improvementId) => Object.entries(state(raw).votes).filter(([, id]) => id === improvementId).map(([userId]) => userId);
+
+/* ---------------- At-a-glance text: a one-line summary per row and a structured tooltip ---------------- */
+export const SUMMARY = {
+  evidence: ["Lawmen and Medias: +2 to eight investigation skills, at the HQ", "Lawmen +3; a Media's Credibility counts 1 higher"],
+  garage: ["A crew car, upgradable, never sold", "Nomads re-spec Moto in a week"],
+  lockup: ["One soundproof cell, BODY 13 to break out", "Three cells; Lawmen +2 Interrogation"],
+  lounge: ["Fixers: +2 to seven social skills, at the HQ", "Fixers and Medias +2 to set up a meeting"],
+  medbay: ["Crew heals BODY +2; Medtechs +2 to three medical skills, at the HQ", "Medtechs make street drugs like a Tech"],
+  morale: ["Lifestyle −50eb each, monthly; ten upgrades for Humanity, healing, LUCK and Hustle", "step {n} of 10"],
+  rent: ["Rent drops one row on the housing table", "+1 bed per upgrade"],
+  server: ["The HQ's own NET, built with 20,000eb of Home Security", "Netrunners craft decks and programs like a Tech"],
+  studio: ["Rockerboys: +2 to five art skills, at the HQ", "Refine a project for +2 a week"],
+  training: ["A week of practice: +1 to one combat skill", "Solos practice two skills"],
+  workshop: ["Techs bank the same hours toward a second project", "A third project"],
+  workstation: ["An Exec's Team Member joins the crew for real", "Loyal unless betrayed"],
+};
+/** Structured tooltip: who it helps, the bonus as chips, when it applies; same again for the upgrade. */
+export const TIPS = {
+  evidence: {who: "Lawmen, Medias", bonus: ["+2 Composition", "+2 Criminology", "+2 Cryptography", "+2 Deduction", "+2 Education", "+2 Forgery", "+2 Library Search", "+2 Photography/Film"], when: "Ongoing investigations, at the HQ",
+    up: {who: "Lawmen, Medias", bonus: ["Lawmen +3 instead", "Media Credibility +1 rank for Believability"], when: "Stories worked on at the wall"}},
+  garage: {who: "Whole crew", bonus: ["1 Compact Groundcar"], when: "Can take Vehicle Upgrades; cannot be sold; no Moto bonus", up: {who: "Nomads", bonus: ["Re-spec Moto choices"], when: "One week of downtime, all vehicles at full HP"}},
+  lockup: {who: "Whole crew", bonus: ["1 soundproof cell"], when: "Prisoner needs BODY 13 to break out", up: {who: "Lawmen", bonus: ["3 cells", "+2 Interrogation"], when: "Prisoner held at least a day"}},
+  lounge: {who: "Fixers", bonus: ["+2 Bribery", "+2 Bureaucracy", "+2 Business", "+2 Conversation", "+2 Human Perception", "+2 Persuasion", "+2 Trading"], when: "In-person meetings held at the HQ",
+    up: {who: "Fixers, Medias", bonus: ["+2 to arrange an in-person meeting"], when: "With their own Contacts, Clients, Access or Sources"}},
+  medbay: {who: "Whole crew; Medtechs", bonus: ["Heal BODY +2 per day", "+2 First Aid", "+2 Paramedic", "+2 Surgery"], when: "Skills only while at the HQ",
+    up: {who: "Medtechs", bonus: ["Upgrade, Fabricate and Invent street drugs"], when: "Science (Chemistry), as a Tech with Maker; expertise = Medical Tech"}},
+  morale: {who: "Whole crew", bonus: ["−50eb Lifestyle, each, monthly"], when: "", ladder: ["Restore 1d6/2 Humanity each month", "Heal as if BODY were 1 higher", "Crew gains 1 LUCK", "Monthly Humanity becomes 1d6", "Fixers +2 Trading on pay; others haggle 20% more", "Hustle twice, keep the better", "Another 1 LUCK", "Hustle twice, keep both", "Monthly Humanity: best of 2d6", "A unique benefit agreed with the GM"]},
+  rent: {who: "Whole crew", bonus: ["Rent one row lower"], when: "The GM edits the rent to match", up: {who: "Whole crew", bonus: ["+1 bed"], when: "Up to double the original beds, rent unchanged"}},
+  server: {who: "Whole crew; Netrunners", bonus: ["Own NET Architecture", "20,000eb of Home Security to build it"], when: "Nothing bought with it can be resold or removed",
+    up: {who: "Netrunners", bonus: ["Upgrade, Fabricate and Invent decks, hardware, programs"], when: "Electronics/Security Tech, as a Tech with Maker; expertise = Interface"}},
+  studio: {who: "Rockerboys", bonus: ["+2 Acting", "+2 Composition", "+2 Play Instrument", "+2 Paint/Draw/Sculpt", "+2 Photography/Film"], when: "While at the HQ",
+    up: {who: "Rockerboys", bonus: ["+2 per week refining one project"], when: "Stacks until done, abandoned, or a natural 1"}},
+  training: {who: "Whole crew", bonus: ["+1 to one combat skill"], when: "A week of practice; lasts until the next HQ IP award", up: {who: "Solos", bonus: ["Two skills at once"], when: ""}},
+  workshop: {who: "Techs", bonus: ["Same hours count toward a 2nd project"], when: "Upgrade, Fabrication or Invention work at the HQ", up: {who: "Techs", bonus: ["A 3rd project"], when: ""}},
+  workstation: {who: "Execs", bonus: ["1 Team Member becomes a crew member"], when: "Gains IP with the Exec, shares pay, loyal to the Exec", up: {who: "Execs", bonus: ["Loyal unless betrayed"], when: "If lost, restore it before other HQ spending"}},
+};

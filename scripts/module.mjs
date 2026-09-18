@@ -1,4 +1,4 @@
-import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, CATALOG, claim, SITUATIONAL, practiceLimit, STARTER_IP, vote, votersFor} from "./rules.mjs";
+import {ID, catalog, saveCustom, state, purchase, purchaseError, lose, benefits, limit, CATALOG, claim, SITUATIONAL, practiceLimit, STARTER_IP, vote, votersFor, SUMMARY, TIPS} from "./rules.mjs";
 import {run, registerAction} from "./approval.mjs";
 import {customDialog, escapeHTML} from "./custom-improvements.mjs";
 import {runBenefit, ownedCharacters, moraleMode, clearPractice} from "./character-benefits.mjs";
@@ -48,7 +48,7 @@ export class HeadquartersSheet extends DocumentSheet {
           multi: max > 1, upgradeLabel: max > 1 ? `${ups} of ${max}` : "", upgradeDone: max > 0 && ups >= max, noUpgrade: max === 0,
           canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max,
           voters, mine: s.votes[game.user?.id] === c.id, buyable: !error, next: rank === 0 ? "base" : "upgrade",
-          tooltip: `<p><b>Basic.</b> ${escapeHTML(c.base)}</p>` + (c.custom ? `<ol>${(c.upgrades ?? []).map((u) => `<li>${escapeHTML(u)}</li>`).join("") || "<li>No upgrades defined.</li>"}</ol>` : `<p><b>Upgraded.</b> ${escapeHTML(c.upgrade)}</p>`)};
+          summaryHtml: summaryHtml(c, rank), tooltip: tooltipHtml(c, rank)};
       }),
       log: [...s.log].reverse().slice(0, 30)};
   }
@@ -259,6 +259,33 @@ export class HeadquartersSheet extends DocumentSheet {
     s.log.push({date: new Date().toLocaleString(), user: game.user.name, label});
     await this.document.setFlag(ID, "hq", s);
   }
+}
+
+/* ---------- At-a-glance text ---------- */
+const hiLite = (t) => escapeHTML(t).replace(/(\+\d+|−\d+eb|BODY \+\d+|BODY \d+|\d+,\d+eb|\d+ of \d+|1d6\/2|1d6|2d6)/g, "<b>$1</b>");
+function summaryHtml(c, rank) {
+  const [basic, up] = SUMMARY[c.id] ?? [c.base ?? "", c.custom ? (c.upgrades?.[rank - 2] ?? "") : (c.upgrade ?? "")];
+  let text = basic ?? "";
+  if (rank > 1 && up) text += ` · upgraded: ${String(up).replace("{n}", String(rank - 1))}`;
+  return hiLite(text);
+}
+function chips(list) { return `<span class="chips">${list.map((b) => `<span class="chip">${hiLite(b)}</span>`).join("")}</span>`; }
+function rows(t) {
+  return `<div class="row"><span class="lab">Who</span><span class="who">${escapeHTML(t.who)}</span></div>` +
+    `<div class="row"><span class="lab">Bonus</span>${chips(t.bonus)}</div>` +
+    (t.when ? `<div class="row"><span class="lab">When</span><span>${escapeHTML(t.when)}</span></div>` : "");
+}
+function tooltipHtml(c, rank) {
+  const t = TIPS[c.id];
+  if (!t) return `<div class="nplh-tip"><p><b>Basic.</b> ${escapeHTML(c.base)}</p>${c.custom ? `<ol>${(c.upgrades ?? []).map((u) => `<li>${escapeHTML(u)}</li>`).join("") || "<li>No upgrades defined.</li>"}</ol>` : `<p><b>Upgraded.</b> ${escapeHTML(c.upgrade)}</p>`}</div>`;
+  let html = `<div class="nplh-tip">${rows(t)}`;
+  if (t.ladder) {
+    const step = Math.max(0, rank - 1);
+    html += `<div class="lab ladder-title">Upgrades, in order${step ? ` · crew is on step ${step}` : ""}</div><table class="ladder">${t.ladder.map((x, i) => `<tr class="${i + 1 === step ? "now" : ""}${i + 1 < step ? " done" : ""}"><td>${i + 1}</td><td>${hiLite(x)}</td></tr>`).join("")}</table>`;
+  } else if (t.up) {
+    html += `<hr><div class="row"><span class="lab">Upgraded</span><span class="who">${escapeHTML(t.up.who)}</span></div><div class="row"><span class="lab">Bonus</span>${chips(t.up.bonus)}</div>` + (t.up.when ? `<div class="row"><span class="lab">When</span><span>${escapeHTML(t.up.when)}</span></div>` : "");
+  }
+  return html + "</div>";
 }
 
 /** Fills empty crew slots with the party: every character a player owns, up to six. Runs once, when no slot is filled. */

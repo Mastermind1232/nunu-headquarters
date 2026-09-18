@@ -95,3 +95,24 @@
 .nplh .crew-slot span{display:block;width:100%;padding:6px 4px;background:#0d131c;font-size:12px;font-weight:bold;color:#e8edf4;text-align:center}
 .nplh .crew-slot .unlink{top:4px;right:4px;border-radius:3px;opacity:.85}
 .nplh .stats div.editable{cursor:pointer}.nplh .stats div.editable:hover{border-color:#75e0d7}.nplh .stats div.editable i{font-size:10px;margin-left:4px;color:#75e0d7}
+
+/* Row summary and structured tooltip */
+.nplh table.improvements .sum{display:block;font-size:12px;color:#bac8d9;margin-top:2px;line-height:1.35}
+.nplh table.improvements .sum b{color:#75e0d7;font-weight:600}
+.nplh table.improvements td.cell button{min-width:86px;text-align:center}
+.nplh table.improvements td.cell{white-space:nowrap}
+#tooltip .nplh-tip{text-align:left;font-family:var(--cpr-font-primary,"Jost"),Arial,sans-serif;font-size:13px;max-width:380px}
+#tooltip .nplh-tip .row{display:grid;grid-template-columns:62px 1fr;gap:6px 10px;align-items:baseline;margin:6px 0}
+#tooltip .nplh-tip .lab{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#bac8d9}
+#tooltip .nplh-tip .who{display:inline-block;background:#3a2a2e;border:1px solid #6a3a44;border-radius:3px;padding:1px 8px;font-size:12px}
+#tooltip .nplh-tip .chips{display:flex;flex-wrap:wrap;gap:4px}
+#tooltip .nplh-tip .chip{background:#1f5f6b;border:1px solid #2a7a88;border-radius:3px;padding:1px 7px;font-size:12px;white-space:nowrap}
+#tooltip .nplh-tip b{color:#75e0d7;font-weight:700}
+#tooltip .nplh-tip hr{border:0;border-top:1px solid #444;margin:8px 0}
+#tooltip .nplh-tip .ladder-title{margin:8px 0 2px}
+#tooltip .nplh-tip table.ladder{width:100%;border-collapse:collapse;margin:0;background:transparent}
+#tooltip .nplh-tip .ladder td{padding:3px 6px;font-size:12px;border-bottom:1px solid #333;border-top:0;color:#eee}
+#tooltip .nplh-tip .ladder td:first-child{color:#bac8d9;width:20px;text-align:right}
+#tooltip .nplh-tip .ladder tr.done td{color:#8ea0b5}
+#tooltip .nplh-tip .ladder tr.now td{background:#1f5f6b;color:#fff}
+#tooltip .nplh-tip p{margin:4px 0}
