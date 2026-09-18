@@ -48,7 +48,7 @@ export class HeadquartersSheet extends DocumentSheet {
           multi: max > 1, upgradeLabel: max > 1 ? `${ups} of ${max}` : "", upgradeDone: max > 0 && ups >= max, noUpgrade: max === 0,
           canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max,
           voters, mine: s.votes[game.user?.id] === c.id, buyable: !error, next: rank === 0 ? "base" : "upgrade",
-          tooltip: `<p><b>Base.</b> ${escapeHTML(c.base)}</p>` + (c.custom ? `<ol>${(c.upgrades ?? []).map((u) => `<li>${escapeHTML(u)}</li>`).join("") || "<li>No upgrades defined.</li>"}</ol>` : `<p><b>Upgraded.</b> ${escapeHTML(c.upgrade)}</p>`)};
+          tooltip: `<p><b>Basic.</b> ${escapeHTML(c.base)}</p>` + (c.custom ? `<ol>${(c.upgrades ?? []).map((u) => `<li>${escapeHTML(u)}</li>`).join("") || "<li>No upgrades defined.</li>"}</ol>` : `<p><b>Upgraded.</b> ${escapeHTML(c.upgrade)}</p>`)};
       }),
       log: [...s.log].reverse().slice(0, 30)};
   }
