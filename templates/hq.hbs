@@ -58,7 +58,7 @@
       <div class="fields three"><label>Monthly rent (eb)<input type="number" min="0" step="1" name="rent" value="{{s.rent}}"></label><label>Beds<input type="number" min="1" step="1" name="beds" value="{{s.beds}}" title="Rent Reduction upgrades add beds, up to double this"></label><label class="check"><input type="checkbox" name="access" {{checked s.access}}> Crew has access</label></div>
     </fieldset>
     <section class="stats three"><div><strong>{{s.ip}}</strong><span>Available HQ IP</span></div><div><strong>{{s.spent}}</strong><span>HQ IP spent so far</span></div><div><strong>{{b.monthlyRent}} eb</strong><span>Monthly rent</span></div></section>
-    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button><span>Once per crew, equal to the mission's Group IP. Clears practice bonuses.</span></div>{{/if}}
+    {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">
     <section class="hq-links"><h2>Crew <small>Six spaces · click a portrait to open its sheet</small></h2>
