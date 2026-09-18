@@ -1,6 +1,6 @@
 import {test} from "node:test";
 import assert from "node:assert/strict";
-import {ID, state, claim, slugify, benefits, vote, votersFor, SUMMARY, TIPS, CATALOG, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
+import {ID, state, claim, slugify, benefits, vote, votersFor, TIPS, CATALOG, desiredSituational, effectChanges, effectFlags, practiceLimit, STARTER_IP} from "../scripts/rules.mjs";
 
 test("slugify matches the system's skill keys", () => {
   assert.equal(slugify("Human Perception"), "humanPerception");
@@ -59,10 +59,10 @@ test("votes: one per user, toggled off by voting again, listed per improvement",
   assert.throws(() => vote(s, "u1", "nowhere"), /Unknown/);
 });
 
-test("every improvement has a summary pair and a structured tip", () => {
+test("every improvement has tooltip content: a basic tier, and an upgrade or the Morale ladder", () => {
   for (const c of CATALOG) {
-    assert.ok(Array.isArray(SUMMARY[c.id]) && SUMMARY[c.id].length === 2, c.id);
-    const tip = TIPS[c.id]; assert.ok(tip && tip.who && tip.bonus.length, c.id);
-    assert.ok(tip.ladder ? tip.ladder.length === 10 : tip.up && tip.up.who && tip.up.bonus.length, c.id);
+    const tip = TIPS[c.id]; assert.ok(tip?.basic?.head, c.id);
+    assert.ok(tip.ladder ? tip.ladder.length === 10 : tip.up?.head, c.id);
+    if (tip.basic.list) assert.ok(tip.basic.plus && tip.basic.list.length > 0, c.id);
   }
 });
