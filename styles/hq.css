@@ -86,3 +86,11 @@
 .nplh .hq-picture button{background:#26394e !important}
 .nplh .stats.two{grid-template-columns:repeat(2,1fr)}
 .nplh .danger{margin-top:28px;padding-top:12px;border-top:1px solid #3d4c60;text-align:right}.nplh .danger button{width:auto;font-size:12px}
+
+/* Crew portraits fill their slot, name on a strip at the bottom. */
+.nplh .crew-slot{padding:0;overflow:hidden;border-radius:6px}
+.nplh .crew-slot>button:first-child{padding:0 !important;gap:0;min-height:0;position:relative;display:block}
+.nplh .crew-slot img{width:100%;height:150px;object-fit:cover;object-position:top;border-radius:0;display:block}
+.nplh .crew-slot i{height:150px;width:100%;justify-content:center}
+.nplh .crew-slot span{display:block;width:100%;padding:6px 4px;background:#0d131c;font-size:12px;font-weight:bold;color:#e8edf4;text-align:center}
+.nplh .crew-slot .unlink{top:4px;right:4px;border-radius:3px;opacity:.85}
