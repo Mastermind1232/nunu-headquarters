@@ -11,6 +11,7 @@ import {installWorkshopHooks} from './workshop-service.mjs';
 
 export class HeadquartersSheet extends DocumentSheet {
   async _render(force, options = {}) {
+    if (this.isEditable) await autoCrew(this.document);
     await super._render(force, options);
     if (options.tab) this._tabs?.[0]?.activate(options.tab);
   }
@@ -239,6 +240,16 @@ export class HeadquartersSheet extends DocumentSheet {
     s.log.push({date: new Date().toLocaleString(), user: game.user.name, label});
     await this.document.setFlag(ID, "hq", s);
   }
+}
+
+/** Fills empty crew slots with the party: every character a player owns, up to six. Runs once, when no slot is filled. */
+async function autoCrew(doc) {
+  const s = state(doc.getFlag(ID, "hq"));
+  if ((s.crewSlots ?? []).some(Boolean)) return;
+  const party = game.actors.filter((a) => a.type === "character" && game.users.some((u) => !u.isGM && a.testUserPermission(u, "OWNER")))
+    .sort((a, b) => a.name.localeCompare(b.name)).slice(0, 6).map((a) => a.uuid);
+  if (!party.length) return;
+  await doc.update({[`flags.${ID}.hq.crewSlots`]: Array.from({length: 6}, (_, i) => party[i] ?? "")});
 }
 
 /** Drops a journal pin for the HQ on its scene, once, at the centre of the map. Opening the pin opens the sheet. */

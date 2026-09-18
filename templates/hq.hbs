@@ -61,15 +61,13 @@
     {{#if editable}}<div class="award"><input type="number" min="1" step="1" value="40" data-award aria-label="HQ IP award"><button type="button" data-action="award">Award HQ IP</button></div>{{/if}}
     </section>
     <section class="tab" data-tab="crew" data-group="hq">
-    <section class="hq-links"><h2>Crew <small>Six spaces · click a portrait to open its sheet</small></h2>
+    <section class="hq-links"><h2>Crew</h2>
       <div class="crew-slots">{{#each assets.crew}}<div class="crew-slot" data-drop-zone="crew" data-slot="{{index}}">
         <button type="button" data-open="{{uuid}}" data-available="{{#if linked}}true{{else}}false{{/if}}" {{#unless linked}}disabled{{/unless}} title="{{name}}">
         {{#if image}}<img src="{{image}}" alt="{{name}} portrait">{{else}}<i class="fas fa-user"></i>{{/if}}<span>{{name}}</span></button>
         {{#if ../editable}}{{#if uuid}}<button type="button" class="unlink" data-asset-action="clear-crew" data-slot="{{index}}" title="Unlink crew sheet">×</button>{{/if}}{{/if}}
       </div>{{/each}}</div>
-      <p class="hint">The whole crew lives here. Monthly rent <b>{{b.monthlyRent}}eb</b>, split evenly across the crew, paid from their own sheets. {{b.beds}} beds.</p>
       {{#if editable}}<div class="crew-ip-toolbar"><button type="button" data-crew-ip><i class="fas fa-star" aria-hidden="true"></i> Award crew IP</button><button type="button" data-crew-money><i class="fas fa-coins" aria-hidden="true"></i> Award crew money</button></div>{{/if}}
-      <p class="hint">The GM can drag and drop character sheets from the Actors directory into the six crew slots. Click a portrait to open its sheet.</p>
       <div class="hq-utilities"><div class="garage-slot" data-drop-zone="garage"><h3>Garage</h3>
         <button type="button" data-open="{{assets.garage.uuid}}" data-available="{{#if assets.garage.linked}}true{{else}}false{{/if}}" {{#unless assets.garage.linked}}disabled{{/unless}}>
         {{#if assets.garage.image}}<img src="{{assets.garage.image}}" alt="Vehicle">{{else}}<i class="fas fa-car"></i>{{/if}}<span>{{assets.garage.name}}</span></button>
