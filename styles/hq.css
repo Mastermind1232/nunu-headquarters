@@ -70,3 +70,7 @@
 .nplh table.improvements td.votes button.lockin{background:#5a1f1f;border-color:#c62828}
 .nunu-hq-improvement{margin-top:4px}
 .nplh table.improvements td.cell{text-align:left}.nplh table.improvements th:nth-child(2),.nplh table.improvements th:nth-child(3){text-align:left;width:150px}
+.nplh table.improvements .name{font-size:14px;font-weight:bold;color:#e8edf4;cursor:help;border-bottom:1px dotted #75e0d7}
+.nplh table.improvements .name small{font-weight:normal;color:#8ea0b5;font-size:10px;margin-left:6px}
+.nplh .benefits p{margin:6px 0}
+#tooltip p{margin:4px 0;text-align:left}#tooltip ol{margin:4px 0 4px 16px;text-align:left}

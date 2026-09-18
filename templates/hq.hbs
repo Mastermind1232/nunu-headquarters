@@ -86,17 +86,18 @@
     </section>
     <section class="tab" data-tab="benefits" data-group="hq">
     <h2>Active crew benefits</h2>
-    <p class="hint">Choose a character you own when using an action. Healing, Humanity and Hustle update that character automatically. Apply other conditional bonuses manually.</p>
+    <p class="hint">What the HQ gives the crew right now. Healing and Hustle bonuses are used by the calendar's downtime; the rest apply on their own or on request.</p>
     <div class="benefits">
-    <div class="benefit-row"><p>Natural healing: <b>BODY +{{b.healing}}</b></p><button type="button" data-benefit="heal" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-heart" aria-hidden="true"></i> Heal…</button></div>
-    <p>LUCK increase: <b>+{{b.luck}}</b></p><div class="benefit-row"><p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p><button type="button" data-benefit="lifestyle" {{#unless canUseBenefits}}disabled{{/unless}}>Pay lifestyle…</button></div>
+    <p>Natural healing: <b>BODY +{{b.healing}}</b> per day of rest <span class="hint">(applied by the calendar when a week passes)</span></p>
+    <p>LUCK increase: <b>+{{b.luck}}</b></p>
+    <p>Lifestyle saving: <b>{{b.lifestyle}}eb / member / month</b></p>
+    <p>Hustle: <b>{{b.hustle}}</b> <span class="hint">(applied by the calendar when a week passes)</span></p>
     <div class="benefit-row"><p>Monthly Humanity: <b>{{b.humanity}}</b></p><button type="button" data-benefit="humanity" {{#unless canRecoverHumanity}}disabled{{/unless}}><i class="fas fa-dice" aria-hidden="true"></i> Roll & restore…</button></div>
-    <div class="benefit-row"><p>Hustle: <b>{{b.hustle}}</b></p><button type="button" data-benefit="hustle" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-coins" aria-hidden="true"></i> Roll & earn…</button></div>
     {{#if s.improvements.training}}<div class="benefit-row"><p>Training Area: <b>+1</b> to one combat skill for a week of practice, until the next HQ IP award{{#if soloTwo}} (Solos: two skills){{/if}}</p><button type="button" data-benefit="practice" {{#unless canUseBenefits}}disabled{{/unless}}><i class="fas fa-dumbbell" aria-hidden="true"></i> Practice…</button></div>{{/if}}
     {{#each situational}}<p class="situational"><b>{{name}}</b>, while in the HQ scene: {{roles}} +{{bonus}} to {{skills}}.</p>{{/each}}
-    {{#unless editable}}<p class="hint">Every button here asks the GM to approve before it changes a sheet.</p>{{/unless}}
     {{#if b.negotiation}}<p>Job pay: Fixers gain +2 Trading; non-Fixers can negotiate a 20% increase as Operator 5, without a Trading bonus.</p>{{/if}}
-    {{#if b.custom}}<p>Morale upgrade 10: record the crew's GM-approved unique benefit in Notes.</p>{{/if}}</div>
+    {{#if b.custom}}<p>Morale upgrade 10: record the crew's GM-approved unique benefit in Notes.</p>{{/if}}
+    {{#unless editable}}<p class="hint">Buttons here ask the GM to approve before they change a sheet.</p>{{/unless}}</div>
     {{#if customBenefits}}<h3>Custom benefits <small>Apply effects manually</small></h3><div class="cards">{{#each customBenefits}}<article class="card owned"><h3>{{name}}</h3><p>{{base}}</p><ol>{{#each acquiredUpgrades}}<li>{{this}}</li>{{/each}}</ol></article>{{/each}}</div>{{/if}}
     <label>Notes / training expiry / projects / selected Team Member<textarea name="notes" rows="5" {{#unless editable}}disabled{{/unless}}>{{s.notes}}</textarea></label>
     </section>
@@ -107,8 +108,7 @@
     {{#if canVote}}<p class="hint">Vote for what the crew buys next. One vote each; click again to take it back. The GM locks in the winner.</p>{{/if}}
     <table class="improvements"><thead><tr><th>Improvement</th><th>Base</th><th>Upgrade</th><th>Votes</th>{{#if editable}}<th></th>{{/if}}</tr></thead><tbody>
     {{#each cards}}<tr class="{{#if owned}}owned{{/if}}">
-      <td><details><summary>{{name}}{{#if custom}} <small>custom</small>{{else}} <small>p. {{page}}</small>{{/if}}</summary>
-        <p><b>Base.</b> {{base}}</p>{{#if custom}}<ol class="tiers">{{#each customUpgrades}}<li>{{this}}</li>{{else}}<li>No upgrades defined.</li>{{/each}}</ol>{{else}}<p><b>Upgrade.</b> {{upgrade}}</p>{{/if}}</details></td>
+      <td><span class="name" data-tooltip="{{tooltip}}" data-tooltip-direction="RIGHT">{{name}}{{#if custom}} <small>custom</small>{{else}} <small>p. {{page}}</small>{{/if}}</span></td>
       <td class="cell">{{#if owned}}<span class="tick" title="Owned"><i class="fas fa-check"></i></span>{{else}}{{#if ../editable}}<button type="button" data-action="buy" data-id="{{id}}" {{#unless canBuyBase}}disabled title="{{error}}"{{/unless}}>Buy · {{../s.purchaseCost}}</button>{{else}}<span class="dash">–</span>{{/if}}{{/if}}</td>
       <td class="cell">{{#if noUpgrade}}<span class="dash">–</span>{{else}}{{#if upgradeDone}}<span class="tick" title="Fully upgraded"><i class="fas fa-check"></i>{{#if multi}} {{upgradeLabel}}{{/if}}</span>{{else}}{{#if ../editable}}<button type="button" data-action="buy" data-id="{{id}}" {{#unless canBuyUpgrade}}disabled title="{{#if owned}}{{error}}{{else}}Buy the base first{{/if}}"{{/unless}}>{{#if multi}}+1{{else}}Buy{{/if}} · {{../s.purchaseCost}}</button>{{else}}{{#unless multi}}<span class="dash">–</span>{{/unless}}{{/if}}{{#if multi}}<span class="count">{{upgradeLabel}}</span>{{/if}}{{/if}}{{/if}}</td>
       <td class="cell votes"><span class="voters">{{#each voters}}<img src="{{img}}" title="{{name}}" alt="{{name}}">{{/each}}</span>{{#if ../canVote}}{{#if buyable}}<button type="button" data-vote="{{id}}" class="{{#if mine}}mine{{/if}}">{{#if mine}}<i class="fas fa-check"></i> Voted{{else}}Vote{{/if}}</button>{{/if}}{{/if}}{{#if ../editable}}{{#if voters.length}}<button type="button" data-action="lockin" data-id="{{id}}" class="lockin" {{#unless buyable}}disabled title="{{error}}"{{/unless}}><i class="fas fa-lock"></i> Lock in</button>{{/if}}{{/if}}</td>

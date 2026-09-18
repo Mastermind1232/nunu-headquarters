@@ -45,7 +45,8 @@ export class HeadquartersSheet extends DocumentSheet {
         return {...c, customUpgrades: c.custom ? c.upgrades : [], rank, owned: rank > 0, upgraded: rank > 1, upgrades: ups, maxUpgrades: max, error,
           multi: max > 1, upgradeLabel: max > 1 ? `${ups} of ${max}` : "", upgradeDone: max > 0 && ups >= max, noUpgrade: max === 0,
           canBuyBase: !error && rank === 0, canBuyUpgrade: !error && rank > 0 && ups < max,
-          voters, mine: s.votes[game.user?.id] === c.id, buyable: !error, next: rank === 0 ? "base" : "upgrade"};
+          voters, mine: s.votes[game.user?.id] === c.id, buyable: !error, next: rank === 0 ? "base" : "upgrade",
+          tooltip: `<p><b>Base.</b> ${escapeHTML(c.base)}</p>` + (c.custom ? `<ol>${(c.upgrades ?? []).map((u) => `<li>${escapeHTML(u)}</li>`).join("") || "<li>No upgrades defined.</li>"}</ol>` : `<p><b>Upgrade.</b> ${escapeHTML(c.upgrade)}</p>`)};
       }),
       log: [...s.log].reverse().slice(0, 30)};
   }
@@ -283,7 +284,11 @@ Hooks.once("init", () => {
   installPresenceHooks();
   DocumentSheetConfig.registerSheet(JournalEntry, ID, HeadquartersSheet, {label: "NuNu Headquarters", makeDefault: false});
 });
-Hooks.once("ready", () => { game.modules.get(ID).api = {createHQ}; });
+/** What other modules (the calendar) need to know: the crew's healing bonus and Hustle mode from the HQ they have access to. */
+function crewHQ() { return game.journal.find((j) => j.getFlag(ID, "hq") && state(j.getFlag(ID, "hq")).access) ?? null; }
+function healingBonus() { const hq = crewHQ(); return hq ? benefits(state(hq.getFlag(ID, "hq"))).healing : 0; }
+function hustleMode() { const hq = crewHQ(); return hq ? moraleMode(state(hq.getFlag(ID, "hq"))).hustle : "single"; }
+Hooks.once("ready", () => { game.modules.get(ID).api = {createHQ, healingBonus, hustleMode}; });
 Hooks.on('updateJournalEntry', (doc, changes) => {
   if (!changes.ownership || game.users.find(u => u.isGM && u.active)?.id !== game.user.id) return;
   syncStashOwnership(doc).catch(e => ui.notifications.error(e.message));
